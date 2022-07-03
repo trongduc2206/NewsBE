@@ -86,4 +86,10 @@ public class NewsController {
         return ResponseFactory.success(newsDtos);
     }
 
+    @GetMapping(value = "/relevant/{newsId}")
+    public ResponseEntity getRelevantNews(@PathVariable Long newsId) {
+        List<NewsDto> newsDtos = newsService.findRelevantNews(newsId);
+        return ResponseFactory.success(newsDtos);
+    }
+
 }

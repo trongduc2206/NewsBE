@@ -15,4 +15,7 @@ public interface DataAnalystClient {
 
     @PostMapping(value = "/recommend")
     RecommendResponse getRecommend(@RequestBody RecommendRequest recommendRequest);
+
+    @PostMapping(value = "/recommend/single")
+    RecommendResponse getRelevant(@RequestBody RecommendRequest recommendRequest);
 }

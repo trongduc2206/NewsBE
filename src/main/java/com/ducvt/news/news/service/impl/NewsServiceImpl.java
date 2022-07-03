@@ -314,13 +314,58 @@ public class NewsServiceImpl implements NewsService {
         return mapListNewsToListNewsDto(newsList);
     }
 
-//    @Override
-//    public List<NewsDto> findRelevantNews(Long newsId) {
-//        News news = newsRepository.findByIdAndStatus(newsId, 1).get();
-//
-//        RecommendRequest recommendRequest = new RecommendRequest();
-//
-//    }
+    @Override
+    public List<NewsDto> findRelevantNews(Long newsId) {
+        List<String> contentToCalSimilarity = new ArrayList<>();
+        List<News> candidateNewsList = new ArrayList<>();
+        // target news
+        News targetNews = newsRepository.findByIdAndStatus(newsId, 1).get();
+        // build list candidate
+        if(targetNews.getTopicLv3() != null) {
+            Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC,"createTime"));
+            Page<News> newsPage = newsRepository.findAllByTopicLv2AndStatus(targetNews.getTopicLv3(), 1, pageable);
+            List<News> newsList = newsPage.getContent();
+            if(newsList != null && newsList.size() > 0) {
+                for(News news: newsList) {
+                    if(news.getId() != newsId) {
+                        contentToCalSimilarity.add(news.getContent());
+                        candidateNewsList.add(news);
+                    }
+                }
+            }
+        } else {
+            Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC,"createTime"));
+            Page<News> newsPage = newsRepository.findAllByTopicLv2AndStatus(targetNews.getTopicLv2(), 1, pageable);
+            List<News> newsList = newsPage.getContent();
+            if(newsList != null && newsList.size() > 0) {
+                for(News news: newsList) {
+                    if(news.getId() != newsId) {
+                        contentToCalSimilarity.add(news.getContent());
+                        candidateNewsList.add(news);
+                    }
+                }
+            }
+        }
+
+        contentToCalSimilarity.add(targetNews.getContent());
+        if(contentToCalSimilarity.size() > 5 && candidateNewsList.size() > 5) {
+            RecommendRequest recommendRequest = new RecommendRequest();
+            recommendRequest.setData(contentToCalSimilarity);
+            recommendRequest.setRecommendNum(5);
+            RecommendResponse recommendResponse = dataAnalystClient.getRelevant(recommendRequest);
+            logger.info(String.valueOf(recommendResponse));
+            List<NewsDto> relevantNews = new ArrayList<>();
+            List<Integer> indexs = recommendResponse.getData();
+            for (Integer index : indexs) {
+//            News news = newsListToday.get(index);
+                News news = candidateNewsList.get(index);
+                relevantNews.add(mapNewsToNewsDto(news));
+            }
+            return relevantNews;
+        } else {
+            return null;
+        }
+    }
 
 
 

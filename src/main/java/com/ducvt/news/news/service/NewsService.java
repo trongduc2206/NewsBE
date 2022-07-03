@@ -32,5 +32,5 @@ public interface NewsService {
 
     List<NewsDto> findTop3SameTopicTitles(String topicKey, Long newsId);
 
-//    List<NewsDto> findRelevantNews(Long newsId);
+    List<NewsDto> findRelevantNews(Long newsId);
 }
