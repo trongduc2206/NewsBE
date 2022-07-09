@@ -11,4 +11,6 @@ public interface SourceRepository extends JpaRepository<Source, Integer> {
     Page<Source> findAllBy(Pageable pageable);
 
     Page<Source> findByNameContains(String username, Pageable pageable);
+
+    Boolean existsByName(String name);
 }

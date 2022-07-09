@@ -40,7 +40,9 @@ public enum MessageEnum {
 	NEWS_SAVED_ALREADY("news saved already", "Tin đã được lưu trước đó"),
 
 	DUPLICATE_USERNAME("duplicate_username", "Tên đăng nhập đã tồn tại"),
+	DUPLICATE_SOURCE_NAME("duplicate_source_name", "Tên nguồn tin đã tồn tại"),
 	EMPTY_USERNAME("empty_username", "Tên đăng nhập không được để trống"),
+	EMPTY_SOURCE_NAME("empty_source_name", "Tên nguồn tin không được để trống"),
 	DUPLICATE_EMAIL("duplicate_email", "Email đã tồn tại"),
 	WRONG_ACCOUNT("wrong_account", "Sai tên đăng nhập hoặc mật khẩu");
 

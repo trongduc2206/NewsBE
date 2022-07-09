@@ -1,5 +1,7 @@
 package com.ducvt.news.source.service.impl;
 
+import com.ducvt.news.fw.constant.MessageEnum;
+import com.ducvt.news.fw.exceptions.BusinessLogicException;
 import com.ducvt.news.news.models.Topic;
 import com.ducvt.news.news.repository.TopicRepository;
 import com.ducvt.news.source.models.Source;
@@ -7,6 +9,7 @@ import com.ducvt.news.source.models.SourceCrawl;
 import com.ducvt.news.source.models.dto.SourceCrawlDto;
 import com.ducvt.news.source.models.dto.SourceDto;
 import com.ducvt.news.source.models.dto.SourcePageDto;
+import com.ducvt.news.source.models.dto.TopicCrawl;
 import com.ducvt.news.source.repository.SourceCrawlRepository;
 import com.ducvt.news.source.repository.SourceRepository;
 import com.ducvt.news.source.service.SourceService;
@@ -59,25 +62,72 @@ public class SourceServiceImpl implements SourceService {
         return sourcePageDto;
     }
 
+    @Override
+    public void update(SourceDto sourceDto) {
+        Source source = sourceRepository.findById(sourceDto.getId()).get();
+        if(sourceDto.getName() == null || sourceDto.getName().isEmpty()) {
+            throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_NAME.getMessage());
+        }
+        if(!sourceDto.getName().equals(source.getName())) {
+            if(sourceRepository.existsByName(sourceDto.getName())) {
+                throw new BusinessLogicException(MessageEnum.DUPLICATE_SOURCE_NAME.getMessage());
+            }
+            source.setName(sourceDto.getName());
+        }
+        if(sourceDto.getStatus() != null) {
+            source.setStatus(sourceDto.getStatus());
+        }
+        if(sourceDto.getMode() != null) {
+            source.setMode(sourceDto.getMode());
+            // soft delete old source crawl data
+            List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceDto.getId(), 1);
+            for(SourceCrawl sourceCrawl : sourceCrawls) {
+                sourceCrawl.setStatus(0);
+                sourceCrawlRepository.save(sourceCrawl);
+            }
+            if(sourceDto.getMode() == 1) {
+                source.setFrequency(sourceDto.getFrequency());
+            } else {
+                //:todo xu ly sourceCrawls custom mode
+//                for(SourceCrawlDto sourceCrawlDto : sourceDto.getSourceCrawls()) {
+//                     List<String> topicList = sourceCrawlDto.getTopicList();
+//                     for(String topicKey: topicList) {
+//                         SourceCrawl sourceCrawl = new SourceCrawl();
+//                         Topic topic = topicRepository.findByTopicKeyAndStatus(topicKey, 1).get();
+//                         sourceCrawl.setSourceId(sourceDto.getId());
+//                         sourceCrawl.setTopicId(topic.getId());
+//
+//                     }
+//                }
+            }
+        }
+    }
+
+
 
     private List<SourceCrawlDto> mapSourceCrawlToSourceCrawlDto(List<SourceCrawl> sourceCrawls) {
         List<SourceCrawlDto> sourceCrawlDtos = new ArrayList<>();
-        Map<String, List<String>> map = new HashMap<>();
+        Map<String, List<TopicCrawl>> map = new HashMap<>();
         for(SourceCrawl sourceCrawl : sourceCrawls) {
             Topic topic = topicRepository.findById(sourceCrawl.getTopicId()).get();
-            List<String> topicList;
+//            List<String> topicList;
+//            List<String> crawlUrls;
+            List<TopicCrawl> topicCrawls;
             if(map.containsKey(sourceCrawl.getCrawlTime())) {
-                topicList = map.get(sourceCrawl.getCrawlTime());
+                topicCrawls = map.get(sourceCrawl.getCrawlTime());
             } else {
-                topicList = new ArrayList<>();
+                topicCrawls = new ArrayList<>();
             }
-            topicList.add(topic.getTopicKey());
-            map.put(sourceCrawl.getCrawlTime(), topicList);
+            TopicCrawl topicCrawl = new TopicCrawl();
+            topicCrawl.setTopicKey(topic.getTopicKey());
+            topicCrawl.setCrawlUrl(sourceCrawl.getCrawlUrl());
+            topicCrawls.add(topicCrawl);
+            map.put(sourceCrawl.getCrawlTime(), topicCrawls);
         }
-        for(Map.Entry<String, List<String>> entry : map.entrySet()) {
+        for(Map.Entry<String, List<TopicCrawl>> entry : map.entrySet()) {
             SourceCrawlDto sourceCrawlDto = new SourceCrawlDto();
             sourceCrawlDto.setCrawlTime(entry.getKey());
-            sourceCrawlDto.setTopicList(entry.getValue());
+            sourceCrawlDto.setTopicCrawls(entry.getValue());
             sourceCrawlDtos.add(sourceCrawlDto);
         }
         return sourceCrawlDtos;
