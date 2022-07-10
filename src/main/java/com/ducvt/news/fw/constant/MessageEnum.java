@@ -43,6 +43,13 @@ public enum MessageEnum {
 	DUPLICATE_SOURCE_NAME("duplicate_source_name", "Tên nguồn tin đã tồn tại"),
 	EMPTY_USERNAME("empty_username", "Tên đăng nhập không được để trống"),
 	EMPTY_SOURCE_NAME("empty_source_name", "Tên nguồn tin không được để trống"),
+	EMPTY_SOURCE_MODE("empty_source_mode", "Chế độ nguồn tin không được để trống"),
+	EMPTY_SOURCE_FREQUENCY("empty_source_frequency", "Tần suất không được để trống ở chế độ tần suất"),
+	EMPTY_SOURCE_CRAWLS("empty_source_crawl", "Thông tin cấu hình tùy chỉnh không được để trống ở chế độ tùy chỉnh"),
+	EMPTY_SOURCE_CRAWL_TIME("empty_source_crawl_time", "Thời gian không được để trống ở chế độ tùy chỉnh"),
+	EMPTY_SOURCE_CRAWL_URL("empty_source_crawl_url", "Đường dẫn không được để trống ở chế độ tùy chỉnh"),
+	EMPTY_SOURCE_CRAWL_TOPIC_KEY("empty_source_crawl_topic_key", "Chủ đề không được để trống ở chế độ tùy chỉnh"),
+	EMPTY_SOURCE_STATUS("empty_status", "Trạng thái nguồn tin không được để trống"),
 	DUPLICATE_EMAIL("duplicate_email", "Email đã tồn tại"),
 	WRONG_ACCOUNT("wrong_account", "Sai tên đăng nhập hoặc mật khẩu");
 

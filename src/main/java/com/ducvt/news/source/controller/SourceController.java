@@ -1,6 +1,7 @@
 package com.ducvt.news.source.controller;
 
 import com.ducvt.news.fw.utils.ResponseFactory;
+import com.ducvt.news.source.models.dto.SourceDto;
 import com.ducvt.news.source.models.dto.SourcePageDto;
 import com.ducvt.news.source.service.SourceService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,4 +25,17 @@ public class SourceController {
         SourcePageDto sourcePageDto = sourceService.searchByName(name, page, offset);
         return ResponseFactory.success(sourcePageDto);
     }
+
+    @PutMapping("/update")
+    public ResponseEntity update(@RequestBody SourceDto sourceDto) {
+        sourceService.update(sourceDto);
+        return ResponseFactory.success();
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity create(@RequestBody SourceDto sourceDto) {
+        sourceService.create(sourceDto);
+        return ResponseFactory.success();
+    }
+
 }

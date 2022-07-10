@@ -13,4 +13,6 @@ public interface SourceService {
     SourcePageDto searchByName(String name, int page, int offset);
 
     void update(SourceDto sourceDto);
+
+    void create(SourceDto sourceDto);
 }
