@@ -5,6 +5,9 @@ import java.util.Set;
 import javax.validation.constraints.*;
 
 public class SignupRequest {
+  private Long thirdPartyId;
+  private String type;
+
   @NotBlank
   @Size(min = 3, max = 20)
   private String username;
@@ -16,7 +19,7 @@ public class SignupRequest {
 
   private Set<String> role;
 
-  @NotBlank
+//  @NotBlank
   @Size(min = 6, max = 40)
   private String password;
 
@@ -50,5 +53,21 @@ public class SignupRequest {
 
   public void setRole(Set<String> role) {
     this.role = role;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public Long getThirdPartyId() {
+    return thirdPartyId;
+  }
+
+  public void setThirdPartyId(Long thirdPartyId) {
+    this.thirdPartyId = thirdPartyId;
   }
 }

@@ -13,6 +13,10 @@ import com.ducvt.news.account.models.User;
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByUsernameAndStatus(String username, Integer status);
 
+  Optional<User> findByUsernameAndType(String username, String type);
+
+  Optional<User> findByThirdPartyIdAndType(Long thirdPartyId, String type);
+
   Boolean existsByUsername(String username);
 
   Boolean existsByEmail(String email);

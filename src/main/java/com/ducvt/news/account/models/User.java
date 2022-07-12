@@ -31,7 +31,7 @@ public class User {
   @Email
   private String email;
 
-  @NotBlank
+//  @NotBlank
   @Size(max = 120)
   private String password;
 
@@ -40,6 +40,10 @@ public class User {
   private Date createTime;
 
   private Date updateTime;
+
+  private String type;
+
+  private Long thirdPartyId;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(  name = "user_roles",
@@ -118,5 +122,21 @@ public class User {
 
   public void setRoles(Set<Role> roles) {
     this.roles = roles;
+  }
+
+  public String getType() {
+    return type;
+  }
+
+  public void setType(String type) {
+    this.type = type;
+  }
+
+  public Long getThirdPartyId() {
+    return thirdPartyId;
+  }
+
+  public void setThirdPartyId(Long thirdPartyId) {
+    this.thirdPartyId = thirdPartyId;
   }
 }
