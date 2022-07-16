@@ -38,4 +38,17 @@ public class SourceController {
         return ResponseFactory.success();
     }
 
+    @PutMapping("/stop/{id}")
+    public ResponseEntity stop(@PathVariable Integer id) {
+        sourceService.stop(id);
+        return ResponseFactory.success();
+    }
+
+    @PutMapping("/start/{id}")
+    public ResponseEntity start(@PathVariable Integer id) {
+        sourceService.start(id);
+        return ResponseFactory.success();
+    }
+
+
 }

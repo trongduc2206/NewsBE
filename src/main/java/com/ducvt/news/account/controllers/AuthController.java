@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import com.ducvt.news.account.payload.request.DecodeRequest;
 import com.ducvt.news.account.repository.RoleRepository;
 import com.ducvt.news.account.repository.UserRepository;
 import com.ducvt.news.account.security.jwt.JwtUtils;
@@ -19,11 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.ducvt.news.account.models.ERole;
 import com.ducvt.news.account.models.Role;
@@ -87,6 +84,9 @@ public class AuthController {
             if (signUpRequest.getType() != null && signUpRequest.getType().equals("FACEBOOK")) {
                 User facebookUser = userRepository.findByThirdPartyIdAndType(signUpRequest.getThirdPartyId(), "FACEBOOK").get();
                 return ResponseFactory.success(facebookUser.getId());
+            } else if(signUpRequest.getType() != null && signUpRequest.getType().equals("GOOGLE")) {
+                User googleUser = userRepository.findByThirdPartyIdAndType(signUpRequest.getThirdPartyId(), "GOOGLE").get();
+                return ResponseFactory.success(googleUser.getId());
             } else {
                 throw new BusinessLogicException(MessageEnum.DUPLICATE_USERNAME.getMessage());
             }
@@ -154,5 +154,10 @@ public class AuthController {
         userRepository.save(user);
 
         return ResponseFactory.success(user.getId());
+    }
+
+    @PostMapping(value="/decode")
+    public ResponseEntity decode(@RequestBody DecodeRequest request) {
+        return ResponseFactory.success(jwtUtils.decode(request.getJwt()));
     }
 }

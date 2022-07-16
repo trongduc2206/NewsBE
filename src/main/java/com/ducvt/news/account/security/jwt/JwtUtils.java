@@ -1,8 +1,11 @@
 package com.ducvt.news.account.security.jwt;
 
+import java.util.Base64;
 import java.util.Date;
 
+import com.ducvt.news.account.payload.response.DecodeResponse;
 import com.ducvt.news.account.security.services.UserDetailsImpl;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,4 +58,22 @@ public class JwtUtils {
 
     return false;
   }
+
+//  public Jwt decode(String encodeJwt) {
+//    Jwt jwt = Jwts.parser().parse(encodeJwt);
+//    return jwt;
+//  }
+
+    public DecodeResponse decode(String encodeJwt) {
+      String[] chunks = encodeJwt.split("\\.");
+      Base64.Decoder decoder = Base64.getUrlDecoder();
+
+      String header = new String(decoder.decode(chunks[0]));
+      String payload = new String(decoder.decode(chunks[1]));
+      JSONObject jsonObject = new JSONObject(payload);
+      DecodeResponse decodeResponse = new DecodeResponse();
+      decodeResponse.setEmail(jsonObject.getString("email"));
+      decodeResponse.setName(jsonObject.getString("name"));
+      return decodeResponse;
+    }
 }

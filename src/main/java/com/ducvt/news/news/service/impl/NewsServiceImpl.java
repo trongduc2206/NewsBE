@@ -323,7 +323,7 @@ public class NewsServiceImpl implements NewsService {
         // build list candidate
         if(targetNews.getTopicLv3() != null) {
             Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC,"createTime"));
-            Page<News> newsPage = newsRepository.findAllByTopicLv2AndStatus(targetNews.getTopicLv3(), 1, pageable);
+            Page<News> newsPage = newsRepository.findAllByTopicLv3AndStatus(targetNews.getTopicLv3(), 1, pageable);
             List<News> newsList = newsPage.getContent();
             if(newsList != null && newsList.size() > 0) {
                 for(News news: newsList) {

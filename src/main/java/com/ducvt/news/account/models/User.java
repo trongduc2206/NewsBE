@@ -43,7 +43,7 @@ public class User {
 
   private String type;
 
-  private Long thirdPartyId;
+  private String thirdPartyId;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(  name = "user_roles",
@@ -132,11 +132,11 @@ public class User {
     this.type = type;
   }
 
-  public Long getThirdPartyId() {
+  public String getThirdPartyId() {
     return thirdPartyId;
   }
 
-  public void setThirdPartyId(Long thirdPartyId) {
+  public void setThirdPartyId(String thirdPartyId) {
     this.thirdPartyId = thirdPartyId;
   }
 }

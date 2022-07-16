@@ -15,4 +15,10 @@ public interface SourceService {
     void update(SourceDto sourceDto);
 
     void create(SourceDto sourceDto);
+
+    void delete(Integer sourceId);
+
+    void stop(Integer sourceId);
+
+    void start(Integer sourceId);
 }

@@ -1,6 +1,7 @@
 package com.ducvt.news.account.controllers;
 
 import com.ducvt.news.account.models.User;
+import com.ducvt.news.account.security.jwt.JwtUtils;
 import com.ducvt.news.account.service.UserService;
 import com.ducvt.news.fw.utils.ResponseFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,4 +33,6 @@ public class UserController {
         userService.update(user);
         return ResponseFactory.success();
     }
+
+
 }

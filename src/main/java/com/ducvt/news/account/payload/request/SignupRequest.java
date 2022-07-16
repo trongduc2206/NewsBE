@@ -5,7 +5,7 @@ import java.util.Set;
 import javax.validation.constraints.*;
 
 public class SignupRequest {
-  private Long thirdPartyId;
+  private String thirdPartyId;
   private String type;
 
   @NotBlank
@@ -63,11 +63,11 @@ public class SignupRequest {
     this.type = type;
   }
 
-  public Long getThirdPartyId() {
+  public String getThirdPartyId() {
     return thirdPartyId;
   }
 
-  public void setThirdPartyId(Long thirdPartyId) {
+  public void setThirdPartyId(String thirdPartyId) {
     this.thirdPartyId = thirdPartyId;
   }
 }

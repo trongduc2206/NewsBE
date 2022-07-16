@@ -13,6 +13,8 @@ import com.ducvt.news.source.models.dto.TopicCrawl;
 import com.ducvt.news.source.repository.SourceCrawlRepository;
 import com.ducvt.news.source.repository.SourceRepository;
 import com.ducvt.news.source.service.SourceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +26,7 @@ import java.util.*;
 
 @Service
 public class SourceServiceImpl implements SourceService {
+    private static Logger logger = LoggerFactory.getLogger(SourceServiceImpl.class);
     @Autowired
     SourceRepository sourceRepository;
 
@@ -209,6 +212,61 @@ public class SourceServiceImpl implements SourceService {
             throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_MODE.getMessage());
         }
 
+    }
+
+    @Override
+    public void delete(Integer sourceId) {
+        Optional<Source> sourceToDelete = sourceRepository.findById(sourceId);
+        if(sourceToDelete.isPresent()) {
+            Source source = sourceToDelete.get();
+            if(source.getMode() == 2) {
+                logger.info("deleting a source with custom mode");
+                List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceId, 1);
+                if(sourceCrawls != null && sourceCrawls.size() > 0) {
+                    sourceCrawlRepository.deleteAll(sourceCrawls);
+                }
+            }
+            //:todo delete source
+            sourceRepository.delete(source);
+        } else {
+            throw new BusinessLogicException(MessageEnum.NOT_FOUND_SOURCE_BY_ID.getMessage());
+        }
+    }
+
+    @Override
+    public void stop(Integer sourceId) {
+        Optional<Source> sourceToDelete = sourceRepository.findById(sourceId);
+        if(sourceToDelete.isPresent()) {
+            Source source = sourceToDelete.get();
+//            if(source.getMode() == 2) {
+//                logger.info("soft deleting a source with custom mode");
+//                List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceId, 1);
+//                if(sourceCrawls != null && sourceCrawls.size() > 0) {
+//                    for(SourceCrawl sourceCrawl : sourceCrawls) {
+//                        sourceCrawl.setStatus(0);
+//                        sourceCrawlRepository.save(sourceCrawl);
+//                    }
+//                }
+//            }
+            //:todo delete source
+            source.setStatus(0);
+            sourceRepository.save(source);
+        } else {
+            throw new BusinessLogicException(MessageEnum.NOT_FOUND_SOURCE_BY_ID.getMessage());
+        }
+    }
+
+    @Override
+    public void start(Integer sourceId) {
+        Optional<Source> sourceToDelete = sourceRepository.findById(sourceId);
+        if(sourceToDelete.isPresent()) {
+            Source source = sourceToDelete.get();
+            //:todo delete source
+            source.setStatus(1);
+            sourceRepository.save(source);
+        } else {
+            throw new BusinessLogicException(MessageEnum.NOT_FOUND_SOURCE_BY_ID.getMessage());
+        }
     }
 
     private List<SourceCrawlDto> mapSourceCrawlToSourceCrawlDto(List<SourceCrawl> sourceCrawls) {
