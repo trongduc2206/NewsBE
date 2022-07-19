@@ -4,5 +4,7 @@ public enum InteractType {
     CLICK,
     READ,
     COMMENT,
-    SHARE
+    SHARE,
+    LIKE,
+    DISLIKE
 }

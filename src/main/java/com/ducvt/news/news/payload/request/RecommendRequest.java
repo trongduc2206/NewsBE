@@ -8,4 +8,5 @@ import java.util.List;
 public class RecommendRequest {
     private List<String> data;
     private Integer recommendNum;
+    private Integer historyNum;
 }

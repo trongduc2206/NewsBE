@@ -24,4 +24,9 @@ public class InteractNewsController {
         interactNewsService.insert(interactNewsRequest);
         return ResponseFactory.success();
     }
+
+    @GetMapping(value = "/check-like")
+    public ResponseEntity checkLike(@RequestParam Long userId, @RequestParam Long newsId) {
+        return ResponseFactory.success(interactNewsService.checkLike(userId, newsId));
+    }
 }

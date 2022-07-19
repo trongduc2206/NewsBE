@@ -2,6 +2,8 @@ package com.ducvt.news.news.client;
 
 import com.ducvt.news.news.payload.request.RecommendRequest;
 import com.ducvt.news.news.payload.response.RecommendResponse;
+import com.ducvt.news.source.payload.request.CrawlRequest;
+import com.ducvt.news.source.payload.response.CrawlResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,4 +20,7 @@ public interface DataAnalystClient {
 
     @PostMapping(value = "/recommend/single")
     RecommendResponse getRelevant(@RequestBody RecommendRequest recommendRequest);
+
+    @PostMapping(value = "/crawl")
+    CrawlResponse crawl(@RequestBody CrawlRequest crawlRequest);
 }

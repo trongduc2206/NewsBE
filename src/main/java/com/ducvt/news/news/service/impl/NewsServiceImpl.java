@@ -90,8 +90,9 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     public NewsPageDto search(String query, int offset, int page){
-        Pageable pageable = PageRequest.of(page, offset, Sort.by("createTime"));
-        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrContentContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+        Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
+//        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrContentContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
 
         NewsPageDto newsPageDto = new NewsPageDto();
         List<NewsDto> newsDtos = mapListNewsToListNewsDto(newsPage.getContent());
@@ -178,10 +179,10 @@ public class NewsServiceImpl implements NewsService {
 //        Date timeToQuery = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
 
         //get history news of user
-        List<InteractNews> userInteract = interactNewsRepository.findTop10ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.READ, 1);
+        List<InteractNews> userRead = interactNewsRepository.findTop10ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.READ, 1);
         List<Long> historyNewsIds = new ArrayList<>();
-        if(userInteract != null && userInteract.size() > 0) {
-            for(InteractNews interactNews : userInteract) {
+        if(userRead != null && userRead.size() > 0) {
+            for(InteractNews interactNews : userRead) {
 //                if(interactNews.getInteractTime().before(timeToQuery)) {
                     historyNewsIds.add(interactNews.getNewsId());
 //                }
@@ -189,11 +190,32 @@ public class NewsServiceImpl implements NewsService {
         } else {
             return null;
         }
-//        List<News> historyNews = newsRepository.findByIdInAndStatus(historyNewsIds, 1);
+        //get liked news of user
+        List<InteractNews> userLike = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.LIKE, 1);
+        //get shared news of user
+        List<InteractNews> userShare = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.SHARE, 1);
+
+        //add to history list
         List<News> historyNews = new ArrayList<>();
         for(Long id : historyNewsIds) {
             News news = newsRepository.findByIdAndStatus(id,1).get();
             historyNews.add(news);
+        }
+        if(userLike != null && userLike.size() > 0) {
+            for(InteractNews interactNews : userLike) {
+                News news = newsRepository.findByIdAndStatus(interactNews.getNewsId(), 1).get();
+                if(news != null) {
+                    historyNews.add(news);
+                }
+            }
+        }
+        if(userShare != null && userShare.size() > 0) {
+            for(InteractNews interactNews : userShare) {
+                News news = newsRepository.findByIdAndStatus(interactNews.getNewsId(), 1).get();
+                if(news != null) {
+                    historyNews.add(news);
+                }
+            }
         }
         if(historyNews == null || historyNews.size() < 10) {
             logger.info("not enough history news to recommend for user ", userId);
@@ -212,7 +234,7 @@ public class NewsServiceImpl implements NewsService {
 //        for(InteractNews interactNews : historyInteracts) {
 //            readNewsId.add(interactNews.getNewsId());
 //        }
-        List<Long> readNewsId = interactNewsRepository.findReadNewsIdByUserAndStatus(userId, 1);
+        List<Long> interactNewsId = interactNewsRepository.findInteractedNewsIdByUserAndStatus(userId, 1);
 
         //get current uploaded news by topic
         RecommendRequest recommendRequestTopic = new RecommendRequest();
@@ -224,7 +246,7 @@ public class NewsServiceImpl implements NewsService {
             List<News> newsCurrentTopicToRecommend = new ArrayList<>();
             List<News> newsByTopic = newsRepository.findTop5ByTopicLv1AndStatusOrderByCreateTimeDesc(topicLv1, 1);
             for(News news : newsByTopic) {
-                if(readNewsId!=null && !readNewsId.contains(news)) {
+                if(interactNewsId!=null && !interactNewsId.contains(news)) {
                     contentByTopicToRecommend.add(news.getContent());
                     newsCurrentTopicToRecommend.add(news);
                 }
@@ -235,6 +257,7 @@ public class NewsServiceImpl implements NewsService {
                 }
                 recommendRequestTopic.setData(contentByTopicToRecommend);
                 recommendRequestTopic.setRecommendNum(1);
+                recommendRequestTopic.setHistoryNum(historyNews.size());
                 RecommendResponse recommendResponseTopic = dataAnalystClient.getRecommend(recommendRequestTopic);
                 List<Integer> indexs = recommendResponseTopic.getData();
                 for (Integer index : indexs) {
@@ -281,6 +304,7 @@ public class NewsServiceImpl implements NewsService {
             RecommendRequest recommendRequest = new RecommendRequest();
             recommendRequest.setData(contentList);
                 recommendRequest.setRecommendNum(5);
+                recommendRequest.setHistoryNum(historyNews.size());
             RecommendResponse recommendResponse = dataAnalystClient.getRecommend(recommendRequest);
             logger.info(String.valueOf(recommendResponse));
             List<NewsDto> recommendNews = new ArrayList<>();

@@ -12,7 +12,11 @@ import java.util.List;
 @Repository
 public interface InteractNewsRepository extends JpaRepository<InteractNews, Long> {
     List<InteractNews> findTop10ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(Long userId, InteractType type, Integer status);
+    List<InteractNews> findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(Long userId, InteractType type, Integer status);
     List<InteractNews> findDistinctByUserIdAndStatus(Long userId, Integer status);
     @Query("SELECT DISTINCT i.newsId FROM InteractNews i WHERE i.userId = ?1 and i.status = ?2")
-    List<Long> findReadNewsIdByUserAndStatus(Long userId, Integer status);
+    List<Long> findInteractedNewsIdByUserAndStatus(Long userId, Integer status);
+
+    InteractNews findByStatusAndUserIdAndNewsIdAndType(Integer status, Long userId, Long newsId, InteractType type);
+
 }

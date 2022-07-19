@@ -8,5 +8,7 @@ import org.springframework.stereotype.Service;
 public interface InteractNewsService {
     void insert(InteractNewsRequest interactNewsRequest);
 
+    Boolean checkLike(Long userId, Long newsId);
+
     InteractNews getById(Long id);
 }
