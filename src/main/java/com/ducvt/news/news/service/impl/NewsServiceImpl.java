@@ -17,6 +17,8 @@ import com.ducvt.news.news.repository.NewsRepository;
 import com.ducvt.news.news.repository.SaveNewsRepository;
 import com.ducvt.news.news.repository.TopicRepository;
 import com.ducvt.news.news.service.NewsService;
+import com.ducvt.news.source.service.TaskDefinitionBean;
+import com.ducvt.news.source.service.TaskSchedulingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

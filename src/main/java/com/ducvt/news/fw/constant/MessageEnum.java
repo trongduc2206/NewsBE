@@ -40,6 +40,8 @@ public enum MessageEnum {
 
 	NEWS_SAVED_ALREADY("news saved already", "Tin đã được lưu trước đó"),
 
+	PROCESS_CRAWL_TIME("process_crawl_time_error", "Lỗi xử lý thời gian crawl"),
+
 	DUPLICATE_USERNAME("duplicate_username", "Tên đăng nhập đã tồn tại"),
 	DUPLICATE_SOURCE_NAME("duplicate_source_name", "Tên nguồn tin đã tồn tại"),
 	EMPTY_USERNAME("empty_username", "Tên đăng nhập không được để trống"),

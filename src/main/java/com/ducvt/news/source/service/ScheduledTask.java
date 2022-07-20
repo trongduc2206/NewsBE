@@ -15,7 +15,9 @@ public class ScheduledTask {
     @Autowired
     private DataAnalystClient dataAnalystClient;
 
-//    @Scheduled(fixedRate = 5000)
+    private static final String cronTest = "";
+
+//    @Scheduled(cron = cronTest)
 //    public void scheduleTaskWithFixedRate() {
 //        // call send email method here
 //        String test = dataAnalystClient.test();

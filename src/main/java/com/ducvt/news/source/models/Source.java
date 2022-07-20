@@ -13,7 +13,7 @@ public class Source {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String name;
-    private Integer frequency;
+//    private Integer frequency;
     private Integer mode;
     private Integer status;
     private Date createTime;

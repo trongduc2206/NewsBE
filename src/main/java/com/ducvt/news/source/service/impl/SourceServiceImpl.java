@@ -4,8 +4,10 @@ import com.ducvt.news.fw.constant.MessageEnum;
 import com.ducvt.news.fw.exceptions.BusinessLogicException;
 import com.ducvt.news.news.models.Topic;
 import com.ducvt.news.news.repository.TopicRepository;
+import com.ducvt.news.news.service.TopicService;
 import com.ducvt.news.source.models.Source;
 import com.ducvt.news.source.models.SourceCrawl;
+import com.ducvt.news.source.models.TaskDefinition;
 import com.ducvt.news.source.models.dto.SourceCrawlDto;
 import com.ducvt.news.source.models.dto.SourceDto;
 import com.ducvt.news.source.models.dto.SourcePageDto;
@@ -13,9 +15,12 @@ import com.ducvt.news.source.models.dto.TopicCrawl;
 import com.ducvt.news.source.repository.SourceCrawlRepository;
 import com.ducvt.news.source.repository.SourceRepository;
 import com.ducvt.news.source.service.SourceService;
+import com.ducvt.news.source.service.TaskDefinitionBean;
+import com.ducvt.news.source.service.TaskSchedulingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +40,16 @@ public class SourceServiceImpl implements SourceService {
 
     @Autowired
     TopicRepository topicRepository;
+
+    @Autowired
+    TopicService topicService;
+
+    private @Autowired AutowireCapableBeanFactory beanFactory;
+
+    @Autowired
+    private TaskSchedulingService taskSchedulingService;
+//    @Autowired
+//    private TaskDefinitionBean taskDefinitionBean;
 
     @Override
     public SourcePageDto findAllSource(int page, int offset) {
@@ -77,18 +92,20 @@ public class SourceServiceImpl implements SourceService {
         if (sourceDto.getStatus() != null) {
             source.setStatus(sourceDto.getStatus());
         }
-        if (sourceDto.getMode() != null) {
-            source.setMode(sourceDto.getMode());
+//        if (sourceDto.getMode() != null) {
+//            source.setMode(sourceDto.getMode());
+
             // soft delete old source crawl data
             List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceDto.getId(), 1);
             for (SourceCrawl sourceCrawl : sourceCrawls) {
                 sourceCrawl.setStatus(0);
                 sourceCrawlRepository.save(sourceCrawl);
+                taskSchedulingService.removeScheduledTask(sourceCrawl.getId()+"-custom");
             }
-            if (sourceDto.getMode() == 1) {
-                source.setFrequency(sourceDto.getFrequency());
-            } else {
-                source.setFrequency(null);
+//            if (sourceDto.getMode() == 1) {
+//                source.setFrequency(sourceDto.getFrequency());
+//            } else {
+//                source.setFrequency(null);
                 // xu ly sourceCrawls custom mode
                 if(sourceDto.getSourceCrawls() != null && sourceDto.getSourceCrawls().size() > 0) {
                     for (SourceCrawlDto sourceCrawlDto : sourceDto.getSourceCrawls()) {
@@ -117,15 +134,53 @@ public class SourceServiceImpl implements SourceService {
                             sourceCrawl.setCreateTime(new Date());
                             sourceCrawl.setUpdateTime(new Date());
                             sourceCrawlRepository.save(sourceCrawl);
+                            // todo: add to schdedule
+                            if(sourceDto.getStatus() == 1) {
+                                try {
+                                    TaskDefinition taskDefinition = new TaskDefinition();
+                                    taskDefinition.setUrl(sourceCrawl.getCrawlUrl());
+                                    if (topic.getLevel() != 1) {
+                                        Topic topicLv1 = topicService.findLv1TopicByKey(topic.getTopicKey());
+                                        taskDefinition.setTopicLv1(topicLv1.getId());
+                                        if (topic.getLevel() == 2) {
+                                            taskDefinition.setTopicLv2(topic.getId());
+                                        } else {
+                                            Topic topicLv2 = topicRepository.findByTopicKeyAndStatus(topic.getParentKey(), 1).get();
+                                            taskDefinition.setTopicLv2(topicLv2.getId());
+                                            taskDefinition.setTopicLv3(topic.getId());
+                                        }
+                                    } else {
+                                        taskDefinition.setTopicLv1(topic.getId());
+                                    }
+                                    String crawlTime = sourceCrawl.getCrawlTime();
+                                    String[] times = crawlTime.split(":");
+                                    if (times == null || times.length == 0) {
+                                        sourceRepository.delete(source);
+                                        throw new BusinessLogicException(MessageEnum.PROCESS_CRAWL_TIME.getMessage());
+                                    }
+                                    String cronExpression = "0 " + times[1] + " " + times[0] + " * * ?";
+                                    taskDefinition.setCronExpression(cronExpression);
+                                    TaskDefinitionBean taskDefinitionBean = new TaskDefinitionBean();
+                                    beanFactory.autowireBean(taskDefinitionBean);
+                                    taskDefinitionBean.setTaskDefinition(taskDefinition);
+                                    taskSchedulingService.scheduleATask(sourceCrawl.getId() + "-custom", taskDefinitionBean, taskDefinition.getCronExpression());
+//                                    taskSchedulingService.logAllSchedule();
+                                } catch (Exception e) {
+                                    logger.error(e.getMessage());
+                                    sourceCrawlRepository.delete(sourceCrawl);
+                                    sourceRepository.delete(source);
+                                }
+                            }
                         }
                     }
-                } else {
-                    throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_CRAWLS.getMessage());
                 }
-            }
-        } else {
-            throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_MODE.getMessage());
-        }
+//                else {
+//                    throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_CRAWLS.getMessage());
+//                }
+//            }
+//        } else {
+//            throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_MODE.getMessage());
+//        }
         source.setUpdateTime(new Date());
         sourceRepository.save(source);
     }
@@ -146,25 +201,20 @@ public class SourceServiceImpl implements SourceService {
         } else {
             throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_STATUS.getMessage());
         }
-        if (sourceDto.getMode() != null) {
-            source.setMode(sourceDto.getMode());
-            // soft delete old source crawl data
-//            List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceDto.getId(), 1);
-//            for (SourceCrawl sourceCrawl : sourceCrawls) {
-//                sourceCrawl.setStatus(0);
-//                sourceCrawlRepository.save(sourceCrawl);
-//            }
-            if (sourceDto.getMode() == 1) {
-                if(sourceDto.getFrequency() != null) {
-                    source.setFrequency(sourceDto.getFrequency());
-                } else {
-                    throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_FREQUENCY.getMessage());
-                }
-                source.setCreateTime(new Date());
-                source.setUpdateTime(new Date());
-                sourceRepository.save(source);
-            } else {
-                source.setFrequency(null);
+//        if (sourceDto.getMode() != null) {
+//            source.setMode(sourceDto.getMode());
+
+//            if (sourceDto.getMode() == 1) {
+//                if(sourceDto.getFrequency() != null) {
+//                    source.setFrequency(sourceDto.getFrequency());
+//                } else {
+//                    throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_FREQUENCY.getMessage());
+//                }
+//                source.setCreateTime(new Date());
+//                source.setUpdateTime(new Date());
+//                sourceRepository.save(source);
+//            } else {
+//                source.setFrequency(null);
                 source.setCreateTime(new Date());
                 source.setUpdateTime(new Date());
                 sourceRepository.save(source);
@@ -201,37 +251,76 @@ public class SourceServiceImpl implements SourceService {
                             sourceCrawl.setCreateTime(new Date());
                             sourceCrawl.setUpdateTime(new Date());
                             sourceCrawlRepository.save(sourceCrawl);
+                            // todo: create crawl schedule
+                            if(sourceDto.getStatus() == 1) {
+                                try {
+                                    TaskDefinition taskDefinition = new TaskDefinition();
+                                    taskDefinition.setUrl(sourceCrawl.getCrawlUrl());
+                                    if (topic.getLevel() != 1) {
+                                        Topic topicLv1 = topicService.findLv1TopicByKey(topic.getTopicKey());
+                                        taskDefinition.setTopicLv1(topicLv1.getId());
+                                        if (topic.getLevel() == 2) {
+                                            taskDefinition.setTopicLv2(topic.getId());
+                                        } else {
+                                            Topic topicLv2 = topicRepository.findByTopicKeyAndStatus(topic.getParentKey(), 1).get();
+                                            taskDefinition.setTopicLv2(topicLv2.getId());
+                                            taskDefinition.setTopicLv3(topic.getId());
+                                        }
+                                    } else {
+                                        taskDefinition.setTopicLv1(topic.getId());
+                                    }
+                                    String crawlTime = sourceCrawl.getCrawlTime();
+                                    String[] times = crawlTime.split(":");
+                                    if (times == null || times.length == 0) {
+                                        sourceRepository.delete(source);
+                                        throw new BusinessLogicException(MessageEnum.PROCESS_CRAWL_TIME.getMessage());
+                                    }
+                                    String cronExpression = "0 " + times[1] + " " + times[0] + " * * ?";
+                                    taskDefinition.setCronExpression(cronExpression);
+                                    TaskDefinitionBean taskDefinitionBean = new TaskDefinitionBean();
+                                    beanFactory.autowireBean(taskDefinitionBean);
+                                    taskDefinitionBean.setTaskDefinition(taskDefinition);
+                                    taskSchedulingService.scheduleATask(sourceCrawl.getId() + "-custom", taskDefinitionBean, taskDefinition.getCronExpression());
+                                } catch (Exception e) {
+                                    logger.error(e.getMessage());
+                                    sourceCrawlRepository.delete(sourceCrawl);
+                                    sourceRepository.delete(source);
+                                }
+                            }
                         }
                     }
-                } else {
-                    sourceRepository.delete(source);
-                    throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_CRAWLS.getMessage());
                 }
+//                else {
+//                    sourceRepository.delete(source);
+//                    throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_CRAWLS.getMessage());
+//                }
             }
-        } else {
-            throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_MODE.getMessage());
-        }
+//        }
+//        else {
+//            throw new BusinessLogicException(MessageEnum.EMPTY_SOURCE_MODE.getMessage());
+//        }
 
-    }
+//    }
 
-    @Override
-    public void delete(Integer sourceId) {
-        Optional<Source> sourceToDelete = sourceRepository.findById(sourceId);
-        if(sourceToDelete.isPresent()) {
-            Source source = sourceToDelete.get();
-            if(source.getMode() == 2) {
-                logger.info("deleting a source with custom mode");
-                List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceId, 1);
-                if(sourceCrawls != null && sourceCrawls.size() > 0) {
-                    sourceCrawlRepository.deleteAll(sourceCrawls);
-                }
-            }
-            //:todo delete source
-            sourceRepository.delete(source);
-        } else {
-            throw new BusinessLogicException(MessageEnum.NOT_FOUND_SOURCE_BY_ID.getMessage());
-        }
-    }
+
+//    @Override
+//    public void delete(Integer sourceId) {
+//        Optional<Source> sourceToDelete = sourceRepository.findById(sourceId);
+//        if(sourceToDelete.isPresent()) {
+//            Source source = sourceToDelete.get();
+//            if(source.getMode() == 2) {
+//                logger.info("deleting a source with custom mode");
+//                List<SourceCrawl> sourceCrawls = sourceCrawlRepository.findAllBySourceIdAndStatus(sourceId, 1);
+//                if(sourceCrawls != null && sourceCrawls.size() > 0) {
+//                    sourceCrawlRepository.deleteAll(sourceCrawls);
+//                }
+//            }
+//            //:todo delete source
+//            sourceRepository.delete(source);
+//        } else {
+//            throw new BusinessLogicException(MessageEnum.NOT_FOUND_SOURCE_BY_ID.getMessage());
+//        }
+//    }
 
     @Override
     public void stop(Integer sourceId) {
@@ -308,7 +397,7 @@ public class SourceServiceImpl implements SourceService {
         sourceDto.setMode(source.getMode());
         sourceDto.setCreateTime(source.getCreateTime());
         sourceDto.setUpdateTime(source.getUpdateTime());
-        sourceDto.setFrequency(source.getFrequency());
+//        sourceDto.setFrequency(source.getFrequency());
         sourceDto.setSourceCrawls(sourceCrawlDtos);
         return sourceDto;
     }

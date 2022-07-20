@@ -16,7 +16,7 @@ public interface SourceService {
 
     void create(SourceDto sourceDto);
 
-    void delete(Integer sourceId);
+//    void delete(Integer sourceId);
 
     void stop(Integer sourceId);
 
