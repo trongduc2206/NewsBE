@@ -17,6 +17,9 @@ public interface InteractNewsRepository extends JpaRepository<InteractNews, Long
     @Query("SELECT DISTINCT i.newsId FROM InteractNews i WHERE i.userId = ?1 and i.status = ?2")
     List<Long> findInteractedNewsIdByUserAndStatus(Long userId, Integer status);
 
+    @Query("SELECT DISTINCT i.newsId FROM InteractNews i WHERE i.userId = ?1 and i.status = ?2 and i.type= ?3")
+    List<Long> findInteractedNewsIdByUserAndStatusAndType(Long userId, Integer status, InteractType type);
+
     InteractNews findByStatusAndUserIdAndNewsIdAndType(Integer status, Long userId, Long newsId, InteractType type);
 
 }

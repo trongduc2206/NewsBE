@@ -12,6 +12,8 @@ import java.util.Optional;
 public interface TopicService {
     List<Topic> findNonChildrenTopic();
 
+    List<Topic> findNonChildrenTopicSorted(Long userId);
+
     List<TopicDto> getListTopicToDisplay();
 
     List<TopicDto> getListTopicToDisplayUser(Long userId);

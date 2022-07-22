@@ -20,6 +20,8 @@ public interface NewsService {
 
     NewsPageDto findSavedNewsByUserId(Long userId, int offset, int page);
 
+    NewsPageDto findLikedNewsByUserId(Long userId, int offset, int page);
+
     void saveNewsByUser(Long userId, Long newsId);
 
     Date checkIsSavedByUser(Long userId, Long newsId);

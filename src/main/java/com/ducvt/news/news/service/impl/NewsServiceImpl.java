@@ -124,6 +124,19 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    public NewsPageDto findLikedNewsByUserId(Long userId, int offset, int page) {
+        List<Long> newsIds = interactNewsRepository.findInteractedNewsIdByUserAndStatusAndType(userId, 1, InteractType.LIKE);
+        Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
+        Page<News> likedNewsPage = newsRepository.findByIdInAndStatus(newsIds, 1, pageable);
+        List<NewsDto> newsDtos = mapListNewsToListNewsDto(likedNewsPage.getContent());
+
+        NewsPageDto newsPageDto = new NewsPageDto();
+        newsPageDto.setContent(newsDtos);
+        newsPageDto.setTotalElements(likedNewsPage.getTotalElements());
+        return newsPageDto;
+    }
+
+    @Override
     public void saveNewsByUser(Long userId, Long newsId) {
         SaveNewsId saveNewsId = new SaveNewsId();
         saveNewsId.setNewsId(newsId);
@@ -248,7 +261,7 @@ public class NewsServiceImpl implements NewsService {
             List<News> newsCurrentTopicToRecommend = new ArrayList<>();
             List<News> newsByTopic = newsRepository.findTop5ByTopicLv1AndStatusOrderByCreateTimeDesc(topicLv1, 1);
             for(News news : newsByTopic) {
-                if(interactNewsId!=null && !interactNewsId.contains(news)) {
+                if(interactNewsId!=null && !interactNewsId.contains(news.getId())) {
                     contentByTopicToRecommend.add(news.getContent());
                     newsCurrentTopicToRecommend.add(news);
                 }
@@ -324,7 +337,7 @@ public class NewsServiceImpl implements NewsService {
     public List<NewsDto> findByTopicExcept(GetNewsByTopicExceptRequest request) {
         Topic topic = topicRepository.findByTopicKeyAndStatus(request.getTopicKey(), 1).get();
 //        List<News> newsList = newsRepository.findTop5ByStatusAndTopic_ParentKeyAndIdNotInOrderByCreateTime(1, request.getParentKey(), request.getNewsId());
-        List<News> newsList = newsRepository.findTop5ByStatusAndTopicLv1AndIdNotInOrderByCreateTime(1, topic, request.getNewsId());
+        List<News> newsList = newsRepository.findTop5ByStatusAndTopicLv1AndIdNotInOrderByCreateTimeDesc(1, topic, request.getNewsId());
         return mapListNewsToListNewsDto(newsList);
     }
 

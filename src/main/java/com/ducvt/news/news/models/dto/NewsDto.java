@@ -24,4 +24,5 @@ public class NewsDto {
     private Date updateTime;
     private List<CommentDto> comments;
     private Date savedTime = null;
+    private Date likedTime = null;
 }

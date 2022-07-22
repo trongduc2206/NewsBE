@@ -28,6 +28,12 @@ public class TopicController {
         return ResponseFactory.success(topics);
     }
 
+    @GetMapping(value = "/sorted/{userId}")
+    public ResponseEntity getNonChildrenTopicSorted(@PathVariable Long userId) {
+        List<Topic> topics = topicService.findNonChildrenTopicSorted(userId);
+        return ResponseFactory.success(topics);
+    }
+
     @GetMapping(value = "/display")
     public ResponseEntity getTopicToDisplay() {
         List<TopicDto> topicDtoList = topicService.getListTopicToDisplay();

@@ -50,6 +50,12 @@ public class NewsController {
         return ResponseFactory.success(newsPageDto);
     }
 
+    @GetMapping(value = "/like/{userId}")
+    public ResponseEntity getLikedNews(@PathVariable Long userId, @RequestParam int page, @RequestParam int offset) {
+        NewsPageDto newsPageDto = newsService.findLikedNewsByUserId(userId, offset, page);
+        return ResponseFactory.success(newsPageDto);
+    }
+
     @PostMapping(value = "/save")
     public ResponseEntity saveNewsByUser(@RequestBody SaveNewsRequest saveNewsRequest) {
         newsService.saveNewsByUser(saveNewsRequest.getUserId(), saveNewsRequest.getNewsId());

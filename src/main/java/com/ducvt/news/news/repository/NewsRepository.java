@@ -18,6 +18,8 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 
     Page<News> findAllByTopicLv3AndStatus(Topic topic, Integer status, Pageable pageable);
 
+    Page<News> findByIdInAndStatus(List<Long> ids, Integer status, Pageable pageable);
+
 //    Page<News> findAllByTopic_ParentKeyAndStatus(String parentKey, Integer status, Pageable pageable);
 
     Optional<News> findByIdAndStatus(Long id, Integer status);
@@ -34,12 +36,13 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 
     List<News> findTop15ByStatusOrderByCreateTime(Integer status);
 
-    List<News> findTop5ByStatusAndTopicLv1AndIdNotInOrderByCreateTime(Integer status, Topic topic, List<Long> ids);
+    List<News> findTop5ByStatusAndTopicLv1AndIdNotInOrderByCreateTimeDesc(Integer status, Topic topic, List<Long> ids);
 
     List<News> findTop5ByTopicLv1AndStatusOrderByCreateTimeDesc(Topic topic, Integer status);
 
     List<News> findTop3ByTopicLv2AndStatusAndIdNotOrderByCreateTimeDesc(Topic topic, Integer status, Long id);
 
     List<News> findTop3ByTopicLv3AndStatusAndIdNotOrderByCreateTimeDesc(Topic topic, Integer status, Long id);
+
 
 }

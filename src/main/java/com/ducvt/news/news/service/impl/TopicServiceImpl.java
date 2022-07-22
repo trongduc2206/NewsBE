@@ -4,10 +4,15 @@ import com.ducvt.news.fw.constant.MessageConstant;
 import com.ducvt.news.fw.constant.MessageEnum;
 import com.ducvt.news.fw.exceptions.BusinessLogicException;
 import com.ducvt.news.news.models.ClickTopic;
+import com.ducvt.news.news.models.InteractNews;
+import com.ducvt.news.news.models.News;
 import com.ducvt.news.news.models.Topic;
 import com.ducvt.news.news.models.dto.TopicDto;
+import com.ducvt.news.news.models.enums.InteractType;
 import com.ducvt.news.news.payload.request.ClickTopicRequest;
 import com.ducvt.news.news.repository.ClickTopicRepository;
+import com.ducvt.news.news.repository.InteractNewsRepository;
+import com.ducvt.news.news.repository.NewsRepository;
 import com.ducvt.news.news.repository.TopicRepository;
 import com.ducvt.news.news.service.TopicService;
 import org.slf4j.Logger;
@@ -15,10 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class TopicServiceImpl implements TopicService {
@@ -29,6 +31,12 @@ public class TopicServiceImpl implements TopicService {
     @Autowired
     ClickTopicRepository clickTopicRepository;
 
+    @Autowired
+    InteractNewsRepository interactNewsRepository;
+
+    @Autowired
+    NewsRepository newsRepository;
+
     public TopicServiceImpl(TopicRepository topicRepository) {
         topicRepository = topicRepository;
     }
@@ -36,6 +44,23 @@ public class TopicServiceImpl implements TopicService {
     @Override
     public List<Topic> findNonChildrenTopic() {
         return topicRepository.findByParentKeyNullAndStatus(MessageConstant.ACTIVE_STATUS);
+    }
+
+    @Override
+    public List<Topic> findNonChildrenTopicSorted(Long userId) {
+        List<Topic> topics = topicRepository.findByParentKeyNullAndStatus(1);
+        List<InteractNews> interactNews = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.READ, 1);
+        if(interactNews != null && interactNews.size() > 0) {
+            Collections.reverse(interactNews);
+            for(InteractNews interactNew : interactNews) {
+                News news = newsRepository.findByIdAndStatus(interactNew.getNewsId(), 1).get();
+                if(topics.get(0).getId() != news.getTopicLv1().getId()) {
+                    topics.remove(news.getTopicLv1());
+                    topics.add(0, news.getTopicLv1());
+                }
+            }
+        }
+        return topics;
     }
 
     @Override
