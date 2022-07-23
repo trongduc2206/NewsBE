@@ -30,6 +30,8 @@ public interface NewsService {
 
     List<NewsDto> recommend(Long userId);
 
+    void saveRecommendNews(Long userId);
+
     List<NewsDto> findByTopicExcept(GetNewsByTopicExceptRequest request);
 
     List<NewsDto> findTop3SameTopicTitles(String topicKey, Long newsId);

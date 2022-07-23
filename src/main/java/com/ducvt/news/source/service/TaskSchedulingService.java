@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +19,16 @@ public class TaskSchedulingService {
     @Autowired
     private TaskScheduler taskScheduler;
 
+    @Autowired
+    private ThreadPoolTaskScheduler threadPoolTaskScheduler;
+
     Map<String, ScheduledFuture<?>> jobsMap = new HashMap<>();
 
     public void scheduleATask(String jobId, Runnable tasklet, String cronExpression) {
 //        System.out.println("Scheduling task with job id: " + jobId + " and cron expression: " + cronExpression);
         logger.info("Scheduling task with job id: " + jobId + " and cron expression: " + cronExpression);
-        ScheduledFuture<?> scheduledTask = taskScheduler.schedule(tasklet, new CronTrigger(cronExpression, TimeZone.getTimeZone(TimeZone.getDefault().getID())));
+//        ScheduledFuture<?> scheduledTask = taskScheduler.schedule(tasklet, new CronTrigger(cronExpression, TimeZone.getTimeZone(TimeZone.getDefault().getID())));
+        ScheduledFuture<?> scheduledTask = threadPoolTaskScheduler.schedule(tasklet, new CronTrigger(cronExpression, TimeZone.getTimeZone(TimeZone.getDefault().getID())));
         jobsMap.put(jobId, scheduledTask);
     }
 

@@ -12,10 +12,7 @@ import com.ducvt.news.news.models.enums.InteractType;
 import com.ducvt.news.news.payload.request.GetNewsByTopicExceptRequest;
 import com.ducvt.news.news.payload.request.RecommendRequest;
 import com.ducvt.news.news.payload.response.RecommendResponse;
-import com.ducvt.news.news.repository.InteractNewsRepository;
-import com.ducvt.news.news.repository.NewsRepository;
-import com.ducvt.news.news.repository.SaveNewsRepository;
-import com.ducvt.news.news.repository.TopicRepository;
+import com.ducvt.news.news.repository.*;
 import com.ducvt.news.news.service.NewsService;
 import com.ducvt.news.source.service.TaskDefinitionBean;
 import com.ducvt.news.source.service.TaskSchedulingService;
@@ -49,6 +46,8 @@ public class NewsServiceImpl implements NewsService {
     private InteractNewsRepository interactNewsRepository;
     @Autowired
     private DataAnalystClient dataAnalystClient;
+    @Autowired
+    private RecommendNewsRepository recommendNewsRepository;
     @Override
     public NewsPageDto findByTopic(String topicKey, int offset, int page) {
         Optional<Topic> topicOptional = topicRepository.findByTopicKeyAndStatus(topicKey, MessageConstant.ACTIVE_STATUS);
@@ -189,10 +188,6 @@ public class NewsServiceImpl implements NewsService {
     public List<NewsDto> recommend(Long userId) {
         List<String> contentList = new ArrayList<>();
 
-//        LocalDateTime localDateTime = LocalDateTime.ofInstant(new Date().toInstant(), ZoneId.systemDefault());
-//        LocalDateTime startOfDay = localDateTime.with(LocalTime.MIN);
-//        Date timeToQuery = Date.from(startOfDay.atZone(ZoneId.systemDefault()).toInstant());
-
         //get history news of user
         List<InteractNews> userRead = interactNewsRepository.findTop10ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.READ, 1);
         List<Long> historyNewsIds = new ArrayList<>();
@@ -331,6 +326,130 @@ public class NewsServiceImpl implements NewsService {
             }
             return recommendNews;
         } else return null;
+    }
+
+    @Override
+    public void saveRecommendNews(Long userId) {
+        List<String> contentList = new ArrayList<>();
+
+        //get history news of user
+        List<InteractNews> userRead = interactNewsRepository.findTop10ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.READ, 1);
+        List<Long> historyNewsIds = new ArrayList<>();
+        if(userRead != null && userRead.size() > 0) {
+            for(InteractNews interactNews : userRead) {
+//                if(interactNews.getInteractTime().before(timeToQuery)) {
+                historyNewsIds.add(interactNews.getNewsId());
+//                }
+            }
+        } else {
+            return ;
+        }
+        //get liked news of user
+        List<InteractNews> userLike = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.LIKE, 1);
+        //get shared news of user
+        List<InteractNews> userShare = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.SHARE, 1);
+
+        //add to history list
+        List<News> historyNews = new ArrayList<>();
+        for(Long id : historyNewsIds) {
+            News news = newsRepository.findByIdAndStatus(id,1).get();
+            historyNews.add(news);
+        }
+        if(userLike != null && userLike.size() > 0) {
+            for(InteractNews interactNews : userLike) {
+                News news = newsRepository.findByIdAndStatus(interactNews.getNewsId(), 1).get();
+                if(news != null) {
+                    historyNews.add(news);
+                }
+            }
+        }
+        if(userShare != null && userShare.size() > 0) {
+            for(InteractNews interactNews : userShare) {
+                News news = newsRepository.findByIdAndStatus(interactNews.getNewsId(), 1).get();
+                if(news != null) {
+                    historyNews.add(news);
+                }
+            }
+        }
+        if(historyNews == null || historyNews.size() < 10) {
+            logger.info("not enough history news to recommend for user ", userId);
+            return ;
+        }
+        List<Long> interactNewsId = interactNewsRepository.findInteractedNewsIdByUserAndStatus(userId, 1);
+
+        //get current uploaded news by topic
+        RecommendRequest recommendRequestTopic = new RecommendRequest();
+        List<Topic> topicLv1List = topicRepository.findByLevelAndStatus(1,1);
+        // list news dc chon ra tu tat ca topic - moi topic chon lay 1 news cao nhat
+        List<News> newsFromAllTopicsToRecommend = new ArrayList<>();
+        for(Topic topicLv1 : topicLv1List) {
+            List<String> contentByTopicToRecommend = new ArrayList<>();
+            List<News> newsCurrentTopicToRecommend = new ArrayList<>();
+            List<News> newsByTopic = newsRepository.findTop5ByTopicLv1AndStatusOrderByCreateTimeDesc(topicLv1, 1);
+            for(News news : newsByTopic) {
+                if(interactNewsId!=null && !interactNewsId.contains(news.getId())) {
+                    contentByTopicToRecommend.add(news.getContent());
+                    newsCurrentTopicToRecommend.add(news);
+                }
+            }
+            if(contentByTopicToRecommend != null && contentByTopicToRecommend.size() > 0) {
+                for(News news: historyNews) {
+                    contentByTopicToRecommend.add(news.getContent());
+                }
+                recommendRequestTopic.setData(contentByTopicToRecommend);
+                recommendRequestTopic.setRecommendNum(1);
+                recommendRequestTopic.setHistoryNum(historyNews.size());
+                RecommendResponse recommendResponseTopic = dataAnalystClient.getRecommend(recommendRequestTopic);
+                List<Integer> indexs = recommendResponseTopic.getData();
+                for (Integer index : indexs) {
+                    News news = newsCurrentTopicToRecommend.get(index);
+                    newsFromAllTopicsToRecommend.add(news);
+                }
+            }
+
+        }
+
+        for(News news : newsFromAllTopicsToRecommend) {
+            contentList.add(news.getContent());
+        }
+        // add history news to the end of the list
+        for(News news: historyNews) {
+            contentList.add(news.getContent());
+        }
+        if(contentList.size() > 15) {
+            //call api to get recommend news
+            RecommendRequest recommendRequest = new RecommendRequest();
+            recommendRequest.setData(contentList);
+            recommendRequest.setRecommendNum(5);
+            recommendRequest.setHistoryNum(historyNews.size());
+            RecommendResponse recommendResponse = dataAnalystClient.getRecommend(recommendRequest);
+            logger.info(String.valueOf(recommendResponse));
+//            List<NewsDto> recommendNews = new ArrayList<>();
+            List<String> recommendNewsIds = new ArrayList<>();
+            List<Integer> indexs = recommendResponse.getData();
+            for (Integer index : indexs) {
+//            News news = newsListToday.get(index);
+                News news = newsFromAllTopicsToRecommend.get(index);
+//                recommendNews.add(mapNewsToNewsDto(news));
+                recommendNewsIds.add(news.getId().toString());
+            }
+            String listIdsToSave = String.join(",", recommendNewsIds);
+            Optional<RecommendNews> recommendNews = recommendNewsRepository.findById(userId);
+            if(recommendNews.isPresent()) {
+                RecommendNews updateRecommendNews = recommendNews.get();
+                updateRecommendNews.setListNewsId(listIdsToSave);
+                updateRecommendNews.setUpdateTime(new Date());
+                recommendNewsRepository.save(updateRecommendNews);
+            } else {
+                RecommendNews newRecommendNews = new RecommendNews();
+                newRecommendNews.setUserId(userId);
+                newRecommendNews.setListNewsId(listIdsToSave);
+                newRecommendNews.setCreateTime(new Date());
+                newRecommendNews.setUpdateTime(new Date());
+                recommendNewsRepository.save(newRecommendNews);
+            }
+//            return recommendNews;
+        } else return ;
     }
 
     @Override

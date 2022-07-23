@@ -1,5 +1,6 @@
 package com.ducvt.news.account.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -24,4 +25,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   Page<User> findAllBy(Pageable pageable);
 
   Page<User> findByUsernameContains(String username, Pageable pageable);
+
+  List<User> findAllByStatus(Integer status);
 }

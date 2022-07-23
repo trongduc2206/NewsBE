@@ -74,6 +74,12 @@ public class NewsController {
         return ResponseFactory.success(newsDtoList);
     }
 
+    @GetMapping(value = "save-recommend/{userId}")
+    public ResponseEntity saveRecommendNews(@PathVariable Long userId) {
+        newsService.saveRecommendNews(userId);
+        return ResponseFactory.success();
+    }
+
     @PutMapping(value = "/save/soft-delete")
     public ResponseEntity softDeleteSavedNews(@RequestBody SaveNewsRequest saveNewsRequest) {
         newsService.softDeleteSavedNews(saveNewsRequest.getUserId(), saveNewsRequest.getNewsId());
