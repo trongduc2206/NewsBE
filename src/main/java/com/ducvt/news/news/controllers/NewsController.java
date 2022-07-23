@@ -69,8 +69,14 @@ public class NewsController {
     }
 
     @GetMapping(value = "recommend/{userId}")
-    public ResponseEntity getRecommendNews(@PathVariable Long userId) {
+    public ResponseEntity recommendNews(@PathVariable Long userId) {
         List<NewsDto> newsDtoList = newsService.recommend(userId);
+        return ResponseFactory.success(newsDtoList);
+    }
+
+    @GetMapping(value = "get-recommend/{userId}")
+    public ResponseEntity getRecommendNews(@PathVariable Long userId){
+        List<NewsDto> newsDtoList = newsService.getRecommendNews(userId);
         return ResponseFactory.success(newsDtoList);
     }
 

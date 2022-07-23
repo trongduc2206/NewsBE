@@ -28,10 +28,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class NewsServiceImpl implements NewsService {
@@ -451,6 +448,25 @@ public class NewsServiceImpl implements NewsService {
 //            return recommendNews;
         } else return ;
     }
+
+    @Override
+    public List<NewsDto> getRecommendNews(Long userId){
+        Optional<RecommendNews> recommendNews = recommendNewsRepository.findByUserId(userId);
+        if(recommendNews.isPresent()) {
+            String listNewsId = recommendNews.get().getListNewsId();
+            List<String> newsIds = Arrays.asList(listNewsId.split(","));
+            List<News> newsList = new ArrayList<>();
+            for(String newsId : newsIds) {
+                Long newsIdLong = Long.valueOf(newsId);
+                News news = newsRepository.findById(newsIdLong).get();
+                newsList.add(news);
+            }
+            return mapListNewsToListNewsDto(newsList);
+        } else {
+            return null;
+        }
+    }
+
 
     @Override
     public List<NewsDto> findByTopicExcept(GetNewsByTopicExceptRequest request) {

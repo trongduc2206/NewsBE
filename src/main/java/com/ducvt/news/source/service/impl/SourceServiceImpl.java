@@ -372,6 +372,7 @@ public class SourceServiceImpl implements SourceService {
                 topicCrawls = new ArrayList<>();
             }
             TopicCrawl topicCrawl = new TopicCrawl();
+            topicCrawl.setTopicName(topic.getName());
             topicCrawl.setTopicKey(topic.getTopicKey());
             topicCrawl.setCrawlUrl(sourceCrawl.getCrawlUrl());
             topicCrawls.add(topicCrawl);

@@ -30,6 +30,8 @@ public interface NewsService {
 
     List<NewsDto> recommend(Long userId);
 
+    List<NewsDto> getRecommendNews(Long userId);
+
     void saveRecommendNews(Long userId);
 
     List<NewsDto> findByTopicExcept(GetNewsByTopicExceptRequest request);
