@@ -7,6 +7,7 @@ import com.ducvt.news.news.payload.request.ClickTopicRequest;
 import com.ducvt.news.news.service.TopicService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class TopicController {
     }
 
     @GetMapping(value = "/sorted/{userId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity getNonChildrenTopicSorted(@PathVariable Long userId) {
         List<Topic> topics = topicService.findNonChildrenTopicSorted(userId);
         return ResponseFactory.success(topics);
@@ -41,6 +43,7 @@ public class TopicController {
     }
 
     @GetMapping(value = "/display/{userId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity getTopicToDisplayUser(@PathVariable Long userId) {
         List<TopicDto> topicDtoList = topicService.getListTopicToDisplayUser(userId);
         return ResponseFactory.success(topicDtoList);
@@ -59,6 +62,7 @@ public class TopicController {
     }
 
     @PostMapping(value = "/click")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity saveTopicClick(@RequestBody ClickTopicRequest request) {
         topicService.saveTopicClick(request);
         return ResponseFactory.success();

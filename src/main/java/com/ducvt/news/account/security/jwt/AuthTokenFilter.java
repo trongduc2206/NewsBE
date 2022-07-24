@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.ducvt.news.account.security.services.UserDetailsServiceImpl;
+import com.ducvt.news.fw.exceptions.TokenExpiredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
       }
     } catch (Exception e) {
       logger.error("Cannot set user authentication: {}", e);
+      if(e instanceof TokenExpiredException) {
+        throw new TokenExpiredException("token expired", "token expired");
+      }
     }
 
     filterChain.doFilter(request, response);

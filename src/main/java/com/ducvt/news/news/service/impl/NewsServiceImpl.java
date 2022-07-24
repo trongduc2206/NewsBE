@@ -73,6 +73,34 @@ public class NewsServiceImpl implements NewsService {
         }
     }
 
+    @Override
+    public NewsPageDto findByTopicByUser(String topicKey, int offset, int page, Long userId) {
+        Optional<Topic> topicOptional = topicRepository.findByTopicKeyAndStatus(topicKey, MessageConstant.ACTIVE_STATUS);
+        if(topicOptional != null && topicOptional.isPresent()) {
+            Topic topic = topicOptional.get();
+            Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
+            Page<News> newsPage;
+            if(topic.getLevel() == 1) {
+                newsPage = newsRepository.findAllByTopicLv1AndStatus(topic, 1, pageable);
+            } else if(topic.getLevel() ==2) {
+                newsPage = newsRepository.findAllByTopicLv2AndStatus(topic, 1, pageable);
+            } else {
+                newsPage = newsRepository.findAllByTopicLv3AndStatus(topic, 1, pageable);
+            }
+//            Pageable pageable = PageRequest.of(page, offset, Sort.by("createTime"));
+//            Page<News> newsPage = newsRepository.findAllByTopicAndStatus(topic, MessageConstant.ACTIVE_STATUS, pageable);
+
+            NewsPageDto newsPageDto = new NewsPageDto();
+            List<NewsDto> newsDtos = mapListNewsToListNewsDtoByUser(newsPage.getContent(), userId);
+            newsPageDto.setContent(newsDtos);
+            newsPageDto.setTotalElements(newsPage.getTotalElements());
+
+            return newsPageDto;
+        } else {
+            return null;
+        }
+    }
+
 //    @Override
 //    public NewsPageDto findByParentTopic(String parentKey, int offset, int page) {
 //        Pageable pageable = PageRequest.of(page, offset, Sort.by("createTime"));
@@ -94,6 +122,20 @@ public class NewsServiceImpl implements NewsService {
 
         NewsPageDto newsPageDto = new NewsPageDto();
         List<NewsDto> newsDtos = mapListNewsToListNewsDto(newsPage.getContent());
+        newsPageDto.setContent(newsDtos);
+        newsPageDto.setTotalElements(newsPage.getTotalElements());
+
+        return newsPageDto;
+    }
+
+    @Override
+    public NewsPageDto searchByUser(String query, int offset, int page, Long userId){
+        Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
+//        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrContentContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+
+        NewsPageDto newsPageDto = new NewsPageDto();
+        List<NewsDto> newsDtos = mapListNewsToListNewsDtoByUser(newsPage.getContent(), userId);
         newsPageDto.setContent(newsDtos);
         newsPageDto.setTotalElements(newsPage.getTotalElements());
 
@@ -124,7 +166,7 @@ public class NewsServiceImpl implements NewsService {
         List<Long> newsIds = interactNewsRepository.findInteractedNewsIdByUserAndStatusAndType(userId, 1, InteractType.LIKE);
         Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
         Page<News> likedNewsPage = newsRepository.findByIdInAndStatus(newsIds, 1, pageable);
-        List<NewsDto> newsDtos = mapListNewsToListNewsDto(likedNewsPage.getContent());
+        List<NewsDto> newsDtos = mapListNewsToListNewsDtoByUser(likedNewsPage.getContent(), userId);
 
         NewsPageDto newsPageDto = new NewsPageDto();
         newsPageDto.setContent(newsDtos);
@@ -461,7 +503,7 @@ public class NewsServiceImpl implements NewsService {
                 News news = newsRepository.findById(newsIdLong).get();
                 newsList.add(news);
             }
-            return mapListNewsToListNewsDto(newsList);
+            return mapListNewsToListNewsDtoByUser(newsList, userId);
         } else {
             return null;
         }
@@ -474,6 +516,14 @@ public class NewsServiceImpl implements NewsService {
 //        List<News> newsList = newsRepository.findTop5ByStatusAndTopic_ParentKeyAndIdNotInOrderByCreateTime(1, request.getParentKey(), request.getNewsId());
         List<News> newsList = newsRepository.findTop5ByStatusAndTopicLv1AndIdNotInOrderByCreateTimeDesc(1, topic, request.getNewsId());
         return mapListNewsToListNewsDto(newsList);
+    }
+
+    @Override
+    public List<NewsDto> findByTopicExceptByUser(GetNewsByTopicExceptRequest request, Long userId) {
+        Topic topic = topicRepository.findByTopicKeyAndStatus(request.getTopicKey(), 1).get();
+//        List<News> newsList = newsRepository.findTop5ByStatusAndTopic_ParentKeyAndIdNotInOrderByCreateTime(1, request.getParentKey(), request.getNewsId());
+        List<News> newsList = newsRepository.findTop5ByStatusAndTopicLv1AndIdNotInOrderByCreateTimeDesc(1, topic, request.getNewsId());
+        return mapListNewsToListNewsDtoByUser(newsList, userId);
     }
 
     @Override
@@ -583,10 +633,51 @@ public class NewsServiceImpl implements NewsService {
         return newsDto;
     }
 
+    private NewsDto mapNewsToNewsDtoByUser(News news, Long userId) {
+        NewsDto newsDto = new NewsDto();
+        newsDto.setId(news.getId());
+        newsDto.setTitle(news.getTitle());
+        newsDto.setTopicLv1(news.getTopicLv1());
+        newsDto.setTopicLv2(news.getTopicLv2());
+        newsDto.setTopicLv3(news.getTopicLv3());
+        newsDto.setContent(news.getContent());
+        newsDto.setImageUrl(news.getImageUrl());
+        newsDto.setSummary(news.getSummary());
+        newsDto.setPubDate(news.getPubDate());
+        newsDto.setSourceId(news.getSourceId());
+        newsDto.setKeyword(news.getKeyword());
+        newsDto.setStatus(news.getStatus());
+        newsDto.setCreateTime(news.getCreateTime());
+        newsDto.setUpdateTime(news.getUpdateTime());
+        List<CommentDto> commentDtoList = new ArrayList<>();
+        for(Comment comment : news.getComments()) {
+            CommentDto commentDto = new CommentDto();
+            commentDto.setId(comment.getId());
+            commentDto.setContent(comment.getContent());
+            commentDto.setCreateTime(comment.getCreateTime());
+            commentDto.setUsername(comment.getUser().getUsername());
+            commentDtoList.add(commentDto);
+        }
+        newsDto.setComments(commentDtoList);
+        Optional<SaveNews> saveNews = saveNewsRepository.findByUserIdAndNewsIdAndStatus(userId, news.getId(), 1);
+        if(saveNews.isPresent()) {
+            newsDto.setSavedTime(saveNews.get().getSaveTime());
+        }
+        return newsDto;
+    }
+
     private List<NewsDto> mapListNewsToListNewsDto(List<News> newsList) {
         List<NewsDto> newsDtos = new ArrayList<>();
         for(News news: newsList) {
             newsDtos.add(mapNewsToNewsDto(news));
+        }
+        return newsDtos;
+    }
+
+    private List<NewsDto> mapListNewsToListNewsDtoByUser(List<News> newsList, Long userId) {
+        List<NewsDto> newsDtos = new ArrayList<>();
+        for(News news: newsList) {
+            newsDtos.add(mapNewsToNewsDtoByUser(news, userId));
         }
         return newsDtos;
     }

@@ -5,6 +5,7 @@ import com.ducvt.news.news.payload.request.CommentRequest;
 import com.ducvt.news.news.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin("*")
@@ -15,6 +16,7 @@ public class CommentController {
     private CommentService commentService;
 
     @PostMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity insert(@RequestBody CommentRequest commentRequest) {
         commentService.insert(commentRequest);
         return ResponseFactory.success();

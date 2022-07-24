@@ -6,6 +6,7 @@ import com.ducvt.news.fw.domain.ResponseStatus;
 import com.ducvt.news.fw.domain.ValidationResponse;
 import com.ducvt.news.fw.exceptions.*;
 import com.ducvt.news.fw.utils.ResponseFactory;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.DataException;
@@ -33,6 +34,13 @@ public class GlobalDefaultExceptionHandler {
     public ResponseEntity defaultExceptionHandler(Exception e) {
         log.error(e.getMessage(), e);
         return ResponseFactory.error(HttpStatus.INTERNAL_SERVER_ERROR, MessageConstant.GENERAL_ERROR);
+    }
+
+    @ExceptionHandler(value = TokenExpiredException.class)
+    @ResponseBody
+    public ResponseEntity jwtExpiredExceptionHandler(TokenExpiredException e) {
+        log.error(e.getMessage(), e);
+        return ResponseFactory.error(HttpStatus.UNAUTHORIZED, MessageConstant.GENERAL_ERROR);
     }
 
 //    @ExceptionHandler(value = FeignException.class)

@@ -51,9 +51,35 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-        Optional<User> user = userRepository.findByUsernameAndType(loginRequest.getUsername(), "SYSTEM");
-        if (user.isPresent()) {
-            if (user.get().getStatus() == 1) {
+        if(loginRequest.getType().equals("SYSTEM")) {
+            Optional<User> user = userRepository.findByUsernameAndType(loginRequest.getUsername(), "SYSTEM");
+            if (user.isPresent()) {
+                if (user.get().getStatus() == 1) {
+                    Authentication authentication = authenticationManager.authenticate(
+                            new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    String jwt = jwtUtils.generateJwtToken(authentication);
+
+                    UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+                    List<String> roles = userDetails.getAuthorities().stream()
+                            .map(item -> item.getAuthority())
+                            .collect(Collectors.toList());
+
+                    return ResponseFactory.success(new JwtResponse(jwt,
+                            userDetails.getId(),
+                            userDetails.getUsername(),
+                            userDetails.getEmail(),
+                            roles));
+                } else {
+                    throw new BusinessLogicException(MessageEnum.LOCKED_ACCOUNT.getMessage());
+                }
+            } else {
+                throw new BusinessLogicException(MessageEnum.WRONG_ACCOUNT.getMessage());
+            }
+        } else {
+            Optional<User> userOptional = userRepository.findByEmailAndType(loginRequest.getEmail(), loginRequest.getType());
+            if(userOptional.isPresent()) {
                 Authentication authentication = authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
@@ -71,10 +97,8 @@ public class AuthController {
                         userDetails.getEmail(),
                         roles));
             } else {
-                throw new BusinessLogicException(MessageEnum.LOCKED_ACCOUNT.getMessage());
+                throw new BusinessLogicException(MessageEnum.WRONG_ACCOUNT.getMessage());
             }
-        } else {
-            throw new BusinessLogicException(MessageEnum.WRONG_ACCOUNT.getMessage());
         }
     }
 

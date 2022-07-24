@@ -12,11 +12,15 @@ import java.util.List;
 public interface NewsService {
     NewsPageDto findByTopic(String topicKey, int offset, int page);
 
+    NewsPageDto findByTopicByUser(String topicKey, int offset, int page, Long userId);
+
 //    NewsPageDto findByParentTopic(String parentKey, int offset, int page);
 
     NewsDto findById(Long id);
 
     NewsPageDto search(String query, int offset, int page);
+
+    NewsPageDto searchByUser(String query, int offset, int page, Long userId);
 
     NewsPageDto findSavedNewsByUserId(Long userId, int offset, int page);
 
@@ -35,6 +39,8 @@ public interface NewsService {
     void saveRecommendNews(Long userId);
 
     List<NewsDto> findByTopicExcept(GetNewsByTopicExceptRequest request);
+
+    List<NewsDto> findByTopicExceptByUser(GetNewsByTopicExceptRequest request, Long userId);
 
     List<NewsDto> findTop3SameTopicTitles(String topicKey, Long newsId);
 

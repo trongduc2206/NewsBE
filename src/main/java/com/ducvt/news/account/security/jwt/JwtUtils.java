@@ -5,6 +5,7 @@ import java.util.Date;
 
 import com.ducvt.news.account.payload.response.DecodeResponse;
 import com.ducvt.news.account.security.services.UserDetailsImpl;
+import com.ducvt.news.fw.exceptions.TokenExpiredException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ public class JwtUtils {
       logger.error("Invalid JWT token: {}", e.getMessage());
     } catch (ExpiredJwtException e) {
       logger.error("JWT token is expired: {}", e.getMessage());
+      throw new TokenExpiredException("token expired", "token expired");
     } catch (UnsupportedJwtException e) {
       logger.error("JWT token is unsupported: {}", e.getMessage());
     } catch (IllegalArgumentException e) {

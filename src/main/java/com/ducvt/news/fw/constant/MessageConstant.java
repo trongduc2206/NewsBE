@@ -90,5 +90,7 @@ public class MessageConstant {
     public static final String CONTRACT_SIGNED = "contract_signed";
     public static final String INVALID_DECISION = "invalid_decision";
     public static final String MISSING_REASON = "missing_reason";
+    public static final String TOKEN_EXPIRED = "token_expired";
+
 
 }

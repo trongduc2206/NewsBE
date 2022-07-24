@@ -10,8 +10,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.util.List;
+import java.util.Optional;
 
 public interface SaveNewsRepository  extends JpaRepository<SaveNews, SaveNewsId> {
     Page<SaveNews> findAllByUserIdAndStatus(Long userId, Integer status, Pageable pageable);
 
+    Optional<SaveNews> findByUserIdAndNewsIdAndStatus(Long userId, Long newsId, Integer status);
 }
