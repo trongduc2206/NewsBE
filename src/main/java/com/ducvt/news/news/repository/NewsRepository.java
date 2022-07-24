@@ -30,6 +30,8 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 
     Page<News> findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(String queryTitle, Integer status1, String queryContent, Integer status2, Pageable pageable);
 
+    Page<News> findAllByTitleContainingIgnoreCaseAndStatus(String queryTitle, Integer status, Pageable pageable);
+
     List<News> findByCreateTimeAfterAndTopicLv2InAndStatus(Date time, List<Topic> topics, Integer status);
 
     List<News> findByCreateTimeAfterAndStatus(Date time, Integer status);

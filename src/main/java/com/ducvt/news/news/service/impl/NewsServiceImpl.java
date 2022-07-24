@@ -118,7 +118,8 @@ public class NewsServiceImpl implements NewsService {
     public NewsPageDto search(String query, int offset, int page){
         Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
 //        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrContentContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
-        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+//        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, pageable);
 
         NewsPageDto newsPageDto = new NewsPageDto();
         List<NewsDto> newsDtos = mapListNewsToListNewsDto(newsPage.getContent());
@@ -132,7 +133,8 @@ public class NewsServiceImpl implements NewsService {
     public NewsPageDto searchByUser(String query, int offset, int page, Long userId){
         Pageable pageable = PageRequest.of(page, offset, Sort.by(Sort.Direction.DESC,"createTime"));
 //        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrContentContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
-        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+//        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatusOrSummaryContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, query, MessageConstant.ACTIVE_STATUS, pageable);
+        Page<News> newsPage = newsRepository.findAllByTitleContainingIgnoreCaseAndStatus(query, MessageConstant.ACTIVE_STATUS, pageable);
 
         NewsPageDto newsPageDto = new NewsPageDto();
         List<NewsDto> newsDtos = mapListNewsToListNewsDtoByUser(newsPage.getContent(), userId);
