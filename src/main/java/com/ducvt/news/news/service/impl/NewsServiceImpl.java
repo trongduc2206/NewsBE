@@ -1,5 +1,7 @@
 package com.ducvt.news.news.service.impl;
 
+import com.ducvt.news.account.models.User;
+import com.ducvt.news.account.repository.UserRepository;
 import com.ducvt.news.fw.constant.MessageConstant;
 import com.ducvt.news.fw.constant.MessageEnum;
 import com.ducvt.news.fw.exceptions.BusinessLogicException;
@@ -45,6 +47,11 @@ public class NewsServiceImpl implements NewsService {
     private DataAnalystClient dataAnalystClient;
     @Autowired
     private RecommendNewsRepository recommendNewsRepository;
+    @Autowired
+    private CommentRepository commentRepository;
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public NewsPageDto findByTopic(String topicKey, int offset, int page) {
         Optional<Topic> topicOptional = topicRepository.findByTopicKeyAndStatus(topicKey, MessageConstant.ACTIVE_STATUS);
@@ -389,6 +396,9 @@ public class NewsServiceImpl implements NewsService {
         List<InteractNews> userLike = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.LIKE, 1);
         //get shared news of user
         List<InteractNews> userShare = interactNewsRepository.findTop5ByUserIdAndTypeAndStatusOrderByCreateTimeDesc(userId, InteractType.SHARE, 1);
+        //get commented news of user
+        User user = userRepository.findById(userId).get();
+        List<Comment> comments = commentRepository.findTop5ByUserAndStatus(user, 1);
 
         //add to history list
         List<News> historyNews = new ArrayList<>();
@@ -409,6 +419,13 @@ public class NewsServiceImpl implements NewsService {
                 News news = newsRepository.findByIdAndStatus(interactNews.getNewsId(), 1).get();
                 if(news != null) {
                     historyNews.add(news);
+                }
+            }
+        }
+        if(comments != null && comments.size() > 0) {
+            for(Comment comment : comments) {
+                if(comment.getNews() != null) {
+                    historyNews.add(comment.getNews());
                 }
             }
         }

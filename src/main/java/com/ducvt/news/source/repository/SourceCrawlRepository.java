@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface SourceCrawlRepository extends JpaRepository<SourceCrawl, Integer> {
     List<SourceCrawl> findAllBySourceIdAndStatus(Integer sourceId, Integer status);
+
+    List<SourceCrawl> findAllByStatus(Integer status);
 }

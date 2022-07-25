@@ -135,42 +135,42 @@ public class SourceServiceImpl implements SourceService {
                             sourceCrawl.setUpdateTime(new Date());
                             sourceCrawlRepository.save(sourceCrawl);
                             // todo: add to schdedule
-                            if(sourceDto.getStatus() == 1) {
-                                try {
-                                    TaskDefinition taskDefinition = new TaskDefinition();
-                                    taskDefinition.setUrl(sourceCrawl.getCrawlUrl());
-                                    if (topic.getLevel() != 1) {
-                                        Topic topicLv1 = topicService.findLv1TopicByKey(topic.getTopicKey());
-                                        taskDefinition.setTopicLv1(topicLv1.getId());
-                                        if (topic.getLevel() == 2) {
-                                            taskDefinition.setTopicLv2(topic.getId());
-                                        } else {
-                                            Topic topicLv2 = topicRepository.findByTopicKeyAndStatus(topic.getParentKey(), 1).get();
-                                            taskDefinition.setTopicLv2(topicLv2.getId());
-                                            taskDefinition.setTopicLv3(topic.getId());
-                                        }
-                                    } else {
-                                        taskDefinition.setTopicLv1(topic.getId());
-                                    }
-                                    String crawlTime = sourceCrawl.getCrawlTime();
-                                    String[] times = crawlTime.split(":");
-                                    if (times == null || times.length == 0) {
-                                        sourceRepository.delete(source);
-                                        throw new BusinessLogicException(MessageEnum.PROCESS_CRAWL_TIME.getMessage());
-                                    }
-                                    String cronExpression = "0 " + times[1] + " " + times[0] + " * * ?";
-                                    taskDefinition.setCronExpression(cronExpression);
-                                    TaskDefinitionBean taskDefinitionBean = new TaskDefinitionBean();
-                                    beanFactory.autowireBean(taskDefinitionBean);
-                                    taskDefinitionBean.setTaskDefinition(taskDefinition);
-                                    taskSchedulingService.scheduleATask(sourceCrawl.getId() + "-custom", taskDefinitionBean, taskDefinition.getCronExpression());
-//                                    taskSchedulingService.logAllSchedule();
-                                } catch (Exception e) {
-                                    logger.error(e.getMessage());
-                                    sourceCrawlRepository.delete(sourceCrawl);
-                                    sourceRepository.delete(source);
-                                }
-                            }
+//                            if(sourceDto.getStatus() == 1) {
+//                                try {
+//                                    TaskDefinition taskDefinition = new TaskDefinition();
+//                                    taskDefinition.setUrl(sourceCrawl.getCrawlUrl());
+//                                    if (topic.getLevel() != 1) {
+//                                        Topic topicLv1 = topicService.findLv1TopicByKey(topic.getTopicKey());
+//                                        taskDefinition.setTopicLv1(topicLv1.getId());
+//                                        if (topic.getLevel() == 2) {
+//                                            taskDefinition.setTopicLv2(topic.getId());
+//                                        } else {
+//                                            Topic topicLv2 = topicRepository.findByTopicKeyAndStatus(topic.getParentKey(), 1).get();
+//                                            taskDefinition.setTopicLv2(topicLv2.getId());
+//                                            taskDefinition.setTopicLv3(topic.getId());
+//                                        }
+//                                    } else {
+//                                        taskDefinition.setTopicLv1(topic.getId());
+//                                    }
+//                                    String crawlTime = sourceCrawl.getCrawlTime();
+//                                    String[] times = crawlTime.split(":");
+//                                    if (times == null || times.length == 0) {
+//                                        sourceRepository.delete(source);
+//                                        throw new BusinessLogicException(MessageEnum.PROCESS_CRAWL_TIME.getMessage());
+//                                    }
+//                                    String cronExpression = "0 " + times[1] + " " + times[0] + " * * ?";
+//                                    taskDefinition.setCronExpression(cronExpression);
+//                                    TaskDefinitionBean taskDefinitionBean = new TaskDefinitionBean();
+//                                    beanFactory.autowireBean(taskDefinitionBean);
+//                                    taskDefinitionBean.setTaskDefinition(taskDefinition);
+//                                    taskSchedulingService.scheduleATask(sourceCrawl.getId() + "-custom", taskDefinitionBean, taskDefinition.getCronExpression());
+////                                    taskSchedulingService.logAllSchedule();
+//                                } catch (Exception e) {
+//                                    logger.error(e.getMessage());
+//                                    sourceCrawlRepository.delete(sourceCrawl);
+//                                    sourceRepository.delete(source);
+//                                }
+//                            }
                         }
                     }
                 }
@@ -252,41 +252,41 @@ public class SourceServiceImpl implements SourceService {
                             sourceCrawl.setUpdateTime(new Date());
                             sourceCrawlRepository.save(sourceCrawl);
                             // todo: create crawl schedule
-                            if(sourceDto.getStatus() == 1) {
-                                try {
-                                    TaskDefinition taskDefinition = new TaskDefinition();
-                                    taskDefinition.setUrl(sourceCrawl.getCrawlUrl());
-                                    if (topic.getLevel() != 1) {
-                                        Topic topicLv1 = topicService.findLv1TopicByKey(topic.getTopicKey());
-                                        taskDefinition.setTopicLv1(topicLv1.getId());
-                                        if (topic.getLevel() == 2) {
-                                            taskDefinition.setTopicLv2(topic.getId());
-                                        } else {
-                                            Topic topicLv2 = topicRepository.findByTopicKeyAndStatus(topic.getParentKey(), 1).get();
-                                            taskDefinition.setTopicLv2(topicLv2.getId());
-                                            taskDefinition.setTopicLv3(topic.getId());
-                                        }
-                                    } else {
-                                        taskDefinition.setTopicLv1(topic.getId());
-                                    }
-                                    String crawlTime = sourceCrawl.getCrawlTime();
-                                    String[] times = crawlTime.split(":");
-                                    if (times == null || times.length == 0) {
-                                        sourceRepository.delete(source);
-                                        throw new BusinessLogicException(MessageEnum.PROCESS_CRAWL_TIME.getMessage());
-                                    }
-                                    String cronExpression = "0 " + times[1] + " " + times[0] + " * * ?";
-                                    taskDefinition.setCronExpression(cronExpression);
-                                    TaskDefinitionBean taskDefinitionBean = new TaskDefinitionBean();
-                                    beanFactory.autowireBean(taskDefinitionBean);
-                                    taskDefinitionBean.setTaskDefinition(taskDefinition);
-                                    taskSchedulingService.scheduleATask(sourceCrawl.getId() + "-custom", taskDefinitionBean, taskDefinition.getCronExpression());
-                                } catch (Exception e) {
-                                    logger.error(e.getMessage());
-                                    sourceCrawlRepository.delete(sourceCrawl);
-                                    sourceRepository.delete(source);
-                                }
-                            }
+//                            if(sourceDto.getStatus() == 1) {
+//                                try {
+//                                    TaskDefinition taskDefinition = new TaskDefinition();
+//                                    taskDefinition.setUrl(sourceCrawl.getCrawlUrl());
+//                                    if (topic.getLevel() != 1) {
+//                                        Topic topicLv1 = topicService.findLv1TopicByKey(topic.getTopicKey());
+//                                        taskDefinition.setTopicLv1(topicLv1.getId());
+//                                        if (topic.getLevel() == 2) {
+//                                            taskDefinition.setTopicLv2(topic.getId());
+//                                        } else {
+//                                            Topic topicLv2 = topicRepository.findByTopicKeyAndStatus(topic.getParentKey(), 1).get();
+//                                            taskDefinition.setTopicLv2(topicLv2.getId());
+//                                            taskDefinition.setTopicLv3(topic.getId());
+//                                        }
+//                                    } else {
+//                                        taskDefinition.setTopicLv1(topic.getId());
+//                                    }
+//                                    String crawlTime = sourceCrawl.getCrawlTime();
+//                                    String[] times = crawlTime.split(":");
+//                                    if (times == null || times.length == 0) {
+//                                        sourceRepository.delete(source);
+//                                        throw new BusinessLogicException(MessageEnum.PROCESS_CRAWL_TIME.getMessage());
+//                                    }
+//                                    String cronExpression = "0 " + times[1] + " " + times[0] + " * * ?";
+//                                    taskDefinition.setCronExpression(cronExpression);
+//                                    TaskDefinitionBean taskDefinitionBean = new TaskDefinitionBean();
+//                                    beanFactory.autowireBean(taskDefinitionBean);
+//                                    taskDefinitionBean.setTaskDefinition(taskDefinition);
+//                                    taskSchedulingService.scheduleATask(sourceCrawl.getId() + "-custom", taskDefinitionBean, taskDefinition.getCronExpression());
+//                                } catch (Exception e) {
+//                                    logger.error(e.getMessage());
+//                                    sourceCrawlRepository.delete(sourceCrawl);
+//                                    sourceRepository.delete(source);
+//                                }
+//                            }
                         }
                     }
                 }

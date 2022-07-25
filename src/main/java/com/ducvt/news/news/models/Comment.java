@@ -16,8 +16,8 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "news_id")
+    @ManyToOne
+    @JoinColumn(name = "news_id", referencedColumnName = "id")
     private News news;
     private String content;
     private Integer status;
