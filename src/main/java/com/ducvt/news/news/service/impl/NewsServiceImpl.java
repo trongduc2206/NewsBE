@@ -433,19 +433,32 @@ public class NewsServiceImpl implements NewsService {
             logger.info("not enough history news to recommend for user ", userId);
             return ;
         }
+        // get interacted news of user
         List<Long> interactNewsId = interactNewsRepository.findInteractedNewsIdByUserAndStatus(userId, 1);
+
+        //get saved news of user
+        List<SaveNews> saveNewsList = saveNewsRepository.findByUserIdAndStatus(userId, 1);
+        List<Long> savedNewsByUser = new ArrayList<>();
+        if(saveNewsList != null && saveNewsList.size() > 0) {
+            for(SaveNews saveNews : saveNewsList) {
+                if(saveNews.getNewsId() != null) {
+                    savedNewsByUser.add(saveNews.getNewsId());
+                }
+            }
+        }
 
         //get current uploaded news by topic
         RecommendRequest recommendRequestTopic = new RecommendRequest();
         List<Topic> topicLv1List = topicRepository.findByLevelAndStatus(1,1);
         // list news dc chon ra tu tat ca topic - moi topic chon lay 1 news cao nhat
         List<News> newsFromAllTopicsToRecommend = new ArrayList<>();
+        Map<News, Double> newsFromAllTopicToSort = new HashMap<>();
         for(Topic topicLv1 : topicLv1List) {
             List<String> contentByTopicToRecommend = new ArrayList<>();
             List<News> newsCurrentTopicToRecommend = new ArrayList<>();
             List<News> newsByTopic = newsRepository.findTop5ByTopicLv1AndStatusOrderByCreateTimeDesc(topicLv1, 1);
             for(News news : newsByTopic) {
-                if(interactNewsId!=null && !interactNewsId.contains(news.getId())) {
+                if(interactNewsId!=null && !interactNewsId.contains(news.getId()) && !savedNewsByUser.contains(news.getId())) {
                     contentByTopicToRecommend.add(news.getContent());
                     newsCurrentTopicToRecommend.add(news);
                 }
@@ -459,13 +472,31 @@ public class NewsServiceImpl implements NewsService {
                 recommendRequestTopic.setHistoryNum(historyNews.size());
                 RecommendResponse recommendResponseTopic = dataAnalystClient.getRecommend(recommendRequestTopic);
                 List<Integer> indexs = recommendResponseTopic.getData();
+//                List<Double> points = recommendResponseTopic.getPoint();
                 for (Integer index : indexs) {
                     News news = newsCurrentTopicToRecommend.get(index);
                     newsFromAllTopicsToRecommend.add(news);
+//                    newsFromAllTopicToSort.put(news, points.get(0));
                 }
             }
-
         }
+//        List<Map.Entry<News, Double>> entries = new ArrayList<>(newsFromAllTopicToSort.entrySet());
+//        entries.sort(Map.Entry.comparingByValue());
+
+//        Map<News, Double> result = new LinkedHashMap<>();
+//        for (Map.Entry<News, Double> entry : entries) {
+//            result.put(entry.getKey(), entry.getValue());
+//        }
+//        List<Map.Entry<News, Double>> entriesSorted = new ArrayList<>(result.entrySet());
+//        for(int i =1 ; i <=5 ; i++) {
+//            Map.Entry<News, Double> entry = entriesSorted.get(entriesSorted.size() - i);
+//
+//        }
+//        Map.Entry<News, Double> entry1 = entriesSorted.get(entriesSorted.size() - 1);
+//        for(Map.Entry<News, Double> entry : result.entrySet()) {
+//            logger.info("news " + entry.getKey().getTitle() + " has point " + entry.getValue());
+//
+//        }
 
         for(News news : newsFromAllTopicsToRecommend) {
             contentList.add(news.getContent());
@@ -570,7 +601,7 @@ public class NewsServiceImpl implements NewsService {
             List<News> newsList = newsPage.getContent();
             if(newsList != null && newsList.size() > 0) {
                 for(News news: newsList) {
-                    if(news.getId() != newsId) {
+                    if(!news.getId().equals(newsId)) {
                         contentToCalSimilarity.add(news.getContent());
                         candidateNewsList.add(news);
                     }
@@ -582,7 +613,7 @@ public class NewsServiceImpl implements NewsService {
             List<News> newsList = newsPage.getContent();
             if(newsList != null && newsList.size() > 0) {
                 for(News news: newsList) {
-                    if(news.getId() != newsId) {
+                    if(!news.getId().equals(newsId)) {
                         contentToCalSimilarity.add(news.getContent());
                         candidateNewsList.add(news);
                     }

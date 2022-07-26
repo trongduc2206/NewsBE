@@ -67,7 +67,7 @@ public class TaskDefinitionBean implements Runnable {
                 logger.info("Fail crawl with error -> {}", crawlResponse.getError());
             }
         } catch (Exception e) {
-            logger.error(e.getMessage());
+            logger.error("Exception in crawl process " + e.getMessage());
         }
 
     }

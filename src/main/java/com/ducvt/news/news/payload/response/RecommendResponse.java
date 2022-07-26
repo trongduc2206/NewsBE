@@ -7,4 +7,5 @@ import java.util.List;
 @Data
 public class RecommendResponse {
     private List<Integer> data;
+    private List<Double> point;
 }

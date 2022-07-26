@@ -15,5 +15,7 @@ import java.util.Optional;
 public interface SaveNewsRepository  extends JpaRepository<SaveNews, SaveNewsId> {
     Page<SaveNews> findAllByUserIdAndStatus(Long userId, Integer status, Pageable pageable);
 
+    List<SaveNews> findByUserIdAndStatus(Long userId, Integer status);
+
     Optional<SaveNews> findByUserIdAndNewsIdAndStatus(Long userId, Long newsId, Integer status);
 }
