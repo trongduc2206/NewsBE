@@ -1,6 +1,9 @@
 package com.ducvt.news.source.service;
 
+import com.ducvt.news.account.models.ERole;
+import com.ducvt.news.account.models.Role;
 import com.ducvt.news.account.models.User;
+import com.ducvt.news.account.repository.RoleRepository;
 import com.ducvt.news.account.repository.UserRepository;
 import com.ducvt.news.news.client.DataAnalystClient;
 import com.ducvt.news.news.service.NewsService;
@@ -30,6 +33,9 @@ public class TaskDefinitionBean implements Runnable {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    RoleRepository roleRepository;
+
     public TaskDefinitionBean(){
     }
 
@@ -58,8 +64,17 @@ public class TaskDefinitionBean implements Runnable {
                     List<User> userList = userRepository.findAllByStatus(1);
                     if(userList != null && userList.size() > 0) {
                         logger.info("Calculate recommend news for all active users");
+                        Role role = roleRepository.findByName(ERole.ROLE_USER).get();
                         for(User user : userList) {
-                            newsService.saveRecommendNews(user.getId());
+                            Boolean isUser = false;
+                            for(Role roleCheck : user.getRoles()) {
+                                if(roleCheck.getName().equals(ERole.ROLE_USER)) {
+                                    isUser = true;
+                                }
+                            }
+                            if(isUser) {
+                                newsService.saveRecommendNews(user.getId());
+                            }
                         }
                     }
                 }
